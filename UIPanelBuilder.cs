@@ -202,6 +202,26 @@ namespace CMS2026UITKFramework
             return this;
         }
 
+        /// <summary>
+        /// Creates a horizontal row container.
+        /// Add elements via the returned UIRowBuilder — they are placed left-to-right.
+        /// </summary>
+        /// <param name="height">Row height in pixels (default 26)</param>
+        /// <param name="gap">Vertical gap after the row (default ElemGap)</param>
+        public UIRowBuilder AddRow(float height = ElemH, float gap = ElemGap)
+        {
+            var container = UIRuntime.NewVE();
+            var s = UIRuntime.GetStyle(container);
+            S.Position(s, "Absolute");
+            S.Left(s, 0f); S.Top(s, _currentY);
+            S.Width(s, ContentW); S.Height(s, height);
+            UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), container);
+
+            _currentY += height + gap;
+            return new UIRowBuilder(UIRuntime.GetPtr(container), ContentW, height);
+        }
+
+
         // ══════════════════════════════════════════════════════════════════
         //  PUBLIC SCROLL CONFIGURATION API
         // ══════════════════════════════════════════════════════════════════

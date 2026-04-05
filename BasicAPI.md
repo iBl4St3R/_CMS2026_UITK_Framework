@@ -148,6 +148,23 @@ panel.AddSeparator(color: null);
 panel.AddSpace(pixels: 8f);
 ```
 
+### Row (Multi-column layout)
+```csharp
+// Creates a horizontal row — elements added to it go left-to-right
+var row = panel.AddRow(height: 26f, gap: 4f);
+
+// Available on UIRowBuilder:
+row.RemainingWidth;          // how much horizontal space is left
+row.Height;                  // row height
+
+row.AddLabel("text", width: 100f, color: Color.white);
+row.AddButton("Btn", width: 80f, onClick: () => { }, bgColor: null);
+row.AddToggle(width: 64f, initial: false, onChange: v => { });
+row.AddProgressBar(width: 120f, initial: 0.5f, fillColor: Color.green);
+row.AddSeparator(separatorWidth: 1f, color: null);  // vertical divider
+row.AddSpace(pixels: 8f);
+```
+
 ## Live Update
 ```csharp
 float t = 0f;

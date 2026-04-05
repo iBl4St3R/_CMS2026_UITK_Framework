@@ -61,6 +61,8 @@ public class MyMod : MelonMod
 | `AddImage` | Texture display with tint support |
 | `AddSeparator` | Horizontal divider |
 | `AddSpace` | Empty vertical gap |
+| `AddRow` | Horizontal row container for multi-column layouts |
+
 
 **Panel features:**
 - Draggable title bar

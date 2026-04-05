@@ -1,0 +1,133 @@
+// ============================================================
+//  CMS2026 UITK Framework — DEMO SHOWCASE
+//  Wklej do REPL i odpal. Pokazuje wszystkie elementy + Pro API.
+// ============================================================
+
+using CMS2026UITKFramework;
+using UnityEngine;
+
+// ── 1. Panel główny ─────────────────────────────────────────
+var p = FrameworkAPI.CreatePanel("Framework Demo", 40, 40, 320, 580, sortOrder: 9999);
+
+// ── 2. Labelki ──────────────────────────────────────────────
+p.AddHeader("Labels");
+
+var lbl1 = p.AddLabel("Zwykły tekst (domyślny)");
+
+var lbl2 = p.AddLabel("Duży tekst");
+lbl2.SetFontSize(16);
+
+var lbl3 = p.AddLabel("Kolorowy + border + radius");
+lbl3.SetColor(new Color(1f, 0.75f, 0.2f, 1f));
+lbl3.SetBorderColor(new Color(0.3f, 0.7f, 1f, 1f));
+lbl3.SetBorderWidth(1f);
+lbl3.SetBorderRadius(6f);
+
+// ── 3. Przyciski ────────────────────────────────────────────
+p.AddHeader("Buttons");
+p.AddButton("Do something",  () => MelonLogger.Msg("klik!"));
+p.AddButton("Zielony",       () => MelonLogger.Msg("start!"),
+    new Color(0.1f, 0.35f, 0.1f, 1f));
+p.AddButton("Czerwony",      () => MelonLogger.Msg("stop!"),
+    new Color(0.35f, 0.1f, 0.1f, 1f));
+
+p.AddSeparator();
+
+// ── 4. Toggles ──────────────────────────────────────────────
+p.AddHeader("Toggles");
+p.AddToggle("God Mode",       false, v => MelonLogger.Msg("GodMode: " + v));
+var togWire = p.AddToggle("Wireframe View", true,  v => MelonLogger.Msg("Wire: " + v));
+
+// ── 5. Slidery ──────────────────────────────────────────────
+p.AddHeader("Sliders");
+var sldSpeed = p.AddSlider("Speed",   1f,   100f, 35f,  v => MelonLogger.Msg("Speed: " + v));
+var sldGrav  = p.AddSlider("Gravity", 0f,   200f, 98f,  v => MelonLogger.Msg("Gravity: " + v));
+
+// ── 6. Progress Bary ────────────────────────────────────────
+p.AddHeader("Progress Bars");
+var pbHP   = p.AddProgressBar("HP",   0.75f, Color.green,                    height: 22f);
+var pbXP   = p.AddProgressBar("XP",   0.42f, new Color(0.3f, 0.7f, 1f, 1f), height: 22f);
+var pbFuel = p.AddProgressBar("Fuel", 0.18f, new Color(0.9f, 0.45f, 0.2f, 1f), height: 22f);
+
+// ── 7. Text Input ───────────────────────────────────────────
+p.AddHeader("Text Input");
+var input = p.AddTextInput("Wpisz nazwę gracza...", v => MelonLogger.Msg("Submit: " + v));
+
+// ── 8. Dropdown ─────────────────────────────────────────────
+p.AddHeader("Dropdown");
+var dd = p.AddDropdown("Tryb",
+    new[] { "Normal", "Turbo", "Debug", "Sandbox" },
+    selectedIndex: 0,
+    onChange: i => MelonLogger.Msg("Tryb: " + i));
+
+// ── 9. Color Picker ─────────────────────────────────────────
+p.AddHeader("Color Picker");
+var cp = p.AddColorPicker("Player Color", Color.red,
+    onChange: c => MelonLogger.Msg($"Kolor: R{(int)(c.r*255)} G{(int)(c.g*255)} B{(int)(c.b*255)}"),
+    step: 5);
+
+// ── 10. Separator + spacja ──────────────────────────────────
+p.AddSeparator();
+p.AddSpace(4f);
+
+// ── 11. SetUpdateCallback — animacja na żywo ────────────────
+p.AddHeader("Live Update");
+var lblT   = p.AddLabel("t = 0.0s");
+var pbAnim = p.AddProgressBar("sin(t)", 0.5f, new Color(0.7f, 0.4f, 1f, 1f), height: 20f);
+var lblPulse = p.AddLabel("● aktywny");
+lblPulse.SetColor(new Color(1f, 0.8f, 0.2f, 1f));
+
+p.SetScrollbarVisible(true);
+p.SetDragWhenScrollable(true);
+
+float t = 0f;
+p.SetUpdateCallback(dt => {
+    t += dt;
+    lblT.SetText($"t = {t:F1}s");
+    pbAnim.SetValue((Mathf.Sin(t * 2f) + 1f) * 0.5f);
+
+    // pulsujący label przez Pro API
+    var ve = UIRuntime.WrapVE(lblPulse.GetRawPtr());
+    S.Opacity(UIRuntime.GetStyle(ve), (Mathf.Sin(t * 3f) + 1f) * 0.5f);
+});
+
+// ── 12. WireHover na labelu ──────────────────────────────────
+p.WireHover(
+    lbl3.GetRawPtr(),
+    normal: new Color(0f,    0f,    0f,    0f),
+    hover:  new Color(0.2f,  0.4f,  0.6f,  0.5f),
+    press:  new Color(0.05f, 0.2f,  0.4f,  0.8f)
+);
+
+// ── 13. Pro API — zaokrąglony panel ─────────────────────────
+var panelVE = UIRuntime.WrapVE(p.GetPanelRawPtr());
+var s = UIRuntime.GetStyle(panelVE);
+S.BorderRadius(s, 14f);
+S.BorderColor(s, new Color(0.3f, 0.7f, 1f, 1f));
+S.BorderWidth(s, 2f);
+
+// ── 14. Drugi panel — Sort Order test ───────────────────────
+var p2 = FrameworkAPI.CreatePanel("Sort Order Test", 80, 80, 220, 120, sortOrder: 100);
+p2.AddLabel("Jestem pod głównym panelem (z:100)");
+
+// ── 15. Custom VE — czerwone kółko ──────────────────────────
+var circle = UIRuntime.NewVE();
+var cs = UIRuntime.GetStyle(circle);
+S.Position(cs, "Absolute");
+S.Left(cs, 220f);
+S.Top(cs, 640f);
+S.Width(cs, 60f);
+S.Height(cs, 60f);
+S.BgColor(cs, Color.red);
+S.BorderRadius(cs, 30f);
+S.BorderColor(cs, new Color(0.3f, 0.7f, 1f, 1f));
+S.BorderWidth(cs, 2f);
+
+var rootVE = UIRuntime.WrapVE(p.GetPanelRawPtr());
+UIRuntime.VisualElementType
+    .GetMethod("Add", new[] { UIRuntime.VisualElementType })
+    .Invoke(rootVE, new object[] { circle });
+
+Print("=== Framework Demo gotowy! ===");
+Print($"Panel główny widoczny: {p.IsVisible}");
+Print($"Sort p=9999, p2=100 — główny jest na wierzchu");

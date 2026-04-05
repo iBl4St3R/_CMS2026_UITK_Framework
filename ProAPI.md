@@ -151,6 +151,26 @@ var panel = api.GetMethod("CreatePanel")
     .Invoke(null, new object[] { "My Mod", 40f, 40f, 300f, 400f, 9999 });
 ```
 
+## Custom Element inside a Row (AddRaw)
+```csharp
+// Build your own VE and inject it into a row at a known width
+var row = panel.AddRow(height: 40f);
+
+var ve = UIRuntime.NewVE();
+var s  = UIRuntime.GetStyle(ve);
+S.Position(s, "Absolute");
+S.Left(s, 0f); S.Top(s, 0f);
+S.Width(s, 60f); S.Height(s, 40f);
+S.BgColor(s, new Color(1f, 0.5f, 0f, 1f));
+S.BorderRadius(s, 8f);
+
+row.AddRaw(ve, consumedWidth: 60f);   // ve added, cursor advances 60px
+
+// You can mix AddRaw with normal row elements:
+row.AddSpace(4f);
+row.AddLabel("next", row.RemainingWidth);
+```
+
 ## UIRuntime Public Types (for advanced reflection)
 ```csharp
 UIRuntime.VisualElementType   // UnityEngine.UIElements.VisualElement

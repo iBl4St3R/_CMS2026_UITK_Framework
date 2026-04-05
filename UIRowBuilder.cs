@@ -1,0 +1,214 @@
+﻿using System;
+using System.Linq;
+using UnityEngine;
+
+namespace CMS2026UITKFramework
+{
+    /// <summary>
+    /// Horizontal layout container. Get one via panel.AddRow().
+    /// Elements are placed left-to-right with absolute positioning.
+    /// </summary>
+    public class UIRowBuilder
+    {
+        private readonly IntPtr _containerPtr;
+        private readonly float _totalWidth;
+        private readonly float _height;
+        private float _currentX = 0f;
+
+        internal UIRowBuilder(IntPtr containerPtr, float totalWidth, float height)
+        {
+            _containerPtr = containerPtr;
+            _totalWidth = totalWidth;
+            _height = height;
+        }
+
+        // ── Remaining space ───────────────────────────────────────────────
+        public float RemainingWidth => _totalWidth - _currentX;
+        public float Height => _height;
+
+        // ── AddLabel ──────────────────────────────────────────────────────
+        public UILabelHandle AddLabel(string text, float width,
+                                      Color? color = null)
+        {
+            var lbl = Activator.CreateInstance(UIRuntime.LabelType);
+            var s = UIRuntime.GetStyle(lbl);
+            S.Position(s, "Absolute");
+            S.Left(s, _currentX); S.Top(s, 0f);
+            S.Width(s, width); S.Height(s, _height);
+            S.Color(s, color ?? Color.white);
+            S.Font(s);
+            UIRuntime.LabelType.GetProperty("text").SetValue(lbl, text);
+            UIRuntime.AddChild(UIRuntime.WrapVE(_containerPtr), lbl);
+
+            _currentX += width;
+            return new UILabelHandle(UIRuntime.GetPtr(lbl));
+        }
+
+        // ── AddButton ─────────────────────────────────────────────────────
+        public UIButtonHandle AddButton(string label, float width,
+                                         Action onClick,
+                                         Color? bgColor = null)
+        {
+            Color bg = bgColor ?? new Color(0.18f, 0.28f, 0.48f, 1f);
+            var btn = Activator.CreateInstance(UIRuntime.ButtonType);
+            var s = UIRuntime.GetStyle(btn);
+            S.Position(s, "Absolute");
+            S.Left(s, _currentX); S.Top(s, 0f);
+            S.Width(s, width); S.Height(s, _height);
+            S.BgColor(s, bg);
+            S.Color(s, Color.white);
+            S.Font(s);
+            S.TextAlign(s, TextAnchor.MiddleCenter);
+            S.Padding(s, 0f);
+            UIRuntime.ButtonType.GetProperty("text").SetValue(btn, label);
+
+            if (onClick != null)
+                WireClick(btn, onClick);
+
+            Color hover = new Color(Mathf.Min(bg.r + 0.12f, 1f), Mathf.Min(bg.g + 0.12f, 1f), Mathf.Min(bg.b + 0.12f, 1f), bg.a);
+            Color press = new Color(bg.r * 0.70f, bg.g * 0.70f, bg.b * 0.70f, bg.a);
+            WireHoverPress(btn, bg, hover, press);
+
+            UIRuntime.AddChild(UIRuntime.WrapVE(_containerPtr), btn);
+            _currentX += width;
+            return new UIButtonHandle(UIRuntime.GetPtr(btn));
+        }
+
+        // ── AddToggle ─────────────────────────────────────────────────────
+        public UIToggleHandle AddToggle(float width,
+                                         bool initial = false,
+                                         Action<bool> onChange = null)
+        {
+            var handle = new UIToggleHandle(initial, onChange);
+            Color bg = initial
+                ? new Color(0.18f, 0.58f, 0.28f, 1f)
+                : new Color(0.50f, 0.15f, 0.15f, 1f);
+
+            var btn = Activator.CreateInstance(UIRuntime.ButtonType);
+            var s = UIRuntime.GetStyle(btn);
+            S.Position(s, "Absolute");
+            S.Left(s, _currentX); S.Top(s, 0f);
+            S.Width(s, width); S.Height(s, _height);
+            S.BgColor(s, bg);
+            S.Color(s, Color.white);
+            S.Font(s);
+            S.TextAlign(s, TextAnchor.MiddleCenter);
+            S.Padding(s, 0f);
+            UIRuntime.ButtonType.GetProperty("text").SetValue(btn, initial ? "ON" : "OFF");
+
+            WireClick(btn, () => handle.Toggle());
+            UIRuntime.AddChild(UIRuntime.WrapVE(_containerPtr), btn);
+            handle.Init(UIRuntime.GetPtr(btn));
+
+            _currentX += width;
+            return handle;
+        }
+
+        // ── AddProgressBar ────────────────────────────────────────────────
+        public UIProgressBarHandle AddProgressBar(float width,
+                                                   float initial = 0f,
+                                                   Color? fillColor = null)
+        {
+            Color fc = fillColor ?? new Color(0.20f, 0.65f, 0.30f, 1f);
+            float clamped = Mathf.Clamp01(initial);
+
+            // track
+            var track = UIRuntime.NewVE();
+            var ts = UIRuntime.GetStyle(track);
+            S.Position(ts, "Absolute");
+            S.Left(ts, _currentX); S.Top(ts, (_height - 10f) * 0.5f);
+            S.Width(ts, width); S.Height(ts, 10f);
+            S.BgColor(ts, new Color(0.15f, 0.15f, 0.18f, 1f));
+            S.Overflow(ts, "Hidden");
+            UIRuntime.AddChild(UIRuntime.WrapVE(_containerPtr), track);
+
+            // fill
+            var fill = UIRuntime.NewVE();
+            var fs = UIRuntime.GetStyle(fill);
+            S.Position(fs, "Absolute");
+            S.Left(fs, 0f); S.Top(fs, 0f);
+            S.Width(fs, width * clamped); S.Height(fs, 10f);
+            S.BgColor(fs, fc);
+            UIRuntime.AddChild(track, fill);
+
+            _currentX += width;
+            return new UIProgressBarHandle(UIRuntime.GetPtr(fill), IntPtr.Zero, width, clamped, fc);
+        }
+
+        // ── AddSeparator (vertical) ───────────────────────────────────────
+        public void AddSeparator(float separatorWidth = 1f, Color? color = null)
+        {
+            var sep = UIRuntime.NewVE();
+            var s = UIRuntime.GetStyle(sep);
+            S.Position(s, "Absolute");
+            S.Left(s, _currentX); S.Top(s, 2f);
+            S.Width(s, separatorWidth); S.Height(s, _height - 4f);
+            S.BgColor(s, color ?? new Color(0.30f, 0.30f, 0.40f, 0.8f));
+            UIRuntime.AddChild(UIRuntime.WrapVE(_containerPtr), sep);
+            _currentX += separatorWidth;
+        }
+
+        // ── AddSpace ──────────────────────────────────────────────────────
+        public void AddSpace(float pixels = 8f) => _currentX += pixels;
+
+        // ── Raw VE access ─────────────────────────────────────────────────
+        /// <summary>
+        /// Add a custom-built VisualElement directly into the row.
+        /// You are responsible for setting its Left/Top/Width/Height.
+        /// </summary>
+        public void AddRaw(object ve, float consumedWidth)
+        {
+            UIRuntime.AddChild(UIRuntime.WrapVE(_containerPtr), ve);
+            _currentX += consumedWidth;
+        }
+
+        // ── Internal helpers ──────────────────────────────────────────────
+        private static void WireClick(object btn, Action onClick)
+        {
+            var clickable = UIRuntime.ButtonType.GetProperty("clickable").GetValue(btn);
+            var il2Action = Il2CppInterop.Runtime.DelegateSupport
+                                .ConvertDelegate<Il2CppSystem.Action>(onClick);
+            UIRuntime.ClickableType.GetMethod("add_clicked")
+                .Invoke(clickable, new object[] { il2Action });
+        }
+
+        private static void WireHoverPress(object ve, Color normal, Color hover, Color press)
+        {
+            try
+            {
+                var ue = UIRuntime.UEAsm;
+                var trickle = ue.GetType("UnityEngine.UIElements.TrickleDown");
+                var td = Enum.Parse(trickle, "TrickleDown");
+                var regBase = UIRuntime.VisualElementType.GetMethods()
+                    .First(m => m.Name == "RegisterCallback"
+                             && m.IsGenericMethod
+                             && m.GetParameters().Length == 2);
+
+                var enterReg = regBase.MakeGenericMethod(typeof(UnityEngine.UIElements.PointerEnterEvent));
+                Action<UnityEngine.UIElements.PointerEnterEvent> enterH =
+                    _ => S.BgColor(UIRuntime.GetStyle(ve), hover);
+                enterReg.Invoke(ve, new object[] {
+            Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<UnityEngine.UIElements.EventCallback<UnityEngine.UIElements.PointerEnterEvent>>(enterH), td });
+
+                var leaveReg = regBase.MakeGenericMethod(typeof(UnityEngine.UIElements.PointerLeaveEvent));
+                Action<UnityEngine.UIElements.PointerLeaveEvent> leaveH =
+                    _ => S.BgColor(UIRuntime.GetStyle(ve), normal);
+                leaveReg.Invoke(ve, new object[] {
+            Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<UnityEngine.UIElements.EventCallback<UnityEngine.UIElements.PointerLeaveEvent>>(leaveH), td });
+
+                var downReg = regBase.MakeGenericMethod(typeof(UnityEngine.UIElements.PointerDownEvent));
+                Action<UnityEngine.UIElements.PointerDownEvent> downH =
+                    _ => S.BgColor(UIRuntime.GetStyle(ve), press);
+                downReg.Invoke(ve, new object[] {
+            Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<UnityEngine.UIElements.EventCallback<UnityEngine.UIElements.PointerDownEvent>>(downH), td });
+
+                var upReg = regBase.MakeGenericMethod(typeof(UnityEngine.UIElements.PointerUpEvent));
+                Action<UnityEngine.UIElements.PointerUpEvent> upH =
+                    _ => S.BgColor(UIRuntime.GetStyle(ve), hover);
+                upReg.Invoke(ve, new object[] {
+            Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<UnityEngine.UIElements.EventCallback<UnityEngine.UIElements.PointerUpEvent>>(upH), td });
+            }
+            catch { }
+        }
+    }
+}
