@@ -178,5 +178,147 @@ namespace CMS2026UITKFramework
 
         private string FormatValue(float v)
             => (_step < 1f) ? v.ToString("F1") : ((int)v).ToString();
+
+
+    }
+
+
+    // ── TextInput ─────────────────────────────────────────────────────────────
+    public class UITextInputHandle
+    {
+        private readonly IntPtr _ptr;
+        internal UITextInputHandle(IntPtr ptr) { _ptr = ptr; }
+
+        public string GetValue()
+        {
+            if (_ptr == IntPtr.Zero) return "";
+            var tf = Activator.CreateInstance(UIRuntime.TextFieldType, new object[] { _ptr });
+            return (string)UIRuntime.TextFieldType.GetProperty("value").GetValue(tf) ?? "";
+        }
+
+        public void SetValue(string value)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            var tf = Activator.CreateInstance(UIRuntime.TextFieldType, new object[] { _ptr });
+            UIRuntime.TextFieldType.GetProperty("value").SetValue(tf, value ?? "");
+        }
+
+        public void SetPlaceholder(string text)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            try
+            {
+                var tf = Activator.CreateInstance(UIRuntime.TextFieldType, new object[] { _ptr });
+                var edit = UIRuntime.TextFieldType.GetProperty("textEdition")?.GetValue(tf);
+                edit?.GetType().GetProperty("placeholder")?.SetValue(edit, text);
+            }
+            catch { }
+        }
+
+        public void SetVisible(bool visible)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            var tf = Activator.CreateInstance(UIRuntime.TextFieldType, new object[] { _ptr });
+            S.Display(UIRuntime.GetStyle(tf), visible);
+        }
+    }
+
+    // ── ColorPicker ───────────────────────────────────────────────────────────
+    public class UIColorPickerHandle
+    {
+        private Color _value;
+        private readonly IntPtr _previewPtr;
+        private readonly IntPtr[] _fillPtrs;
+        private readonly IntPtr[] _valuePtrs;
+        private readonly float _trackW;
+        private Action<Color> _onChange;
+
+        internal UIColorPickerHandle(Color initial,
+            IntPtr previewPtr, IntPtr[] fillPtrs, IntPtr[] valuePtrs,
+            float trackW, Action<Color> onChange)
+        {
+            _value = initial;
+            _previewPtr = previewPtr;
+            _fillPtrs = fillPtrs;
+            _valuePtrs = valuePtrs;
+            _trackW = trackW;
+            _onChange = onChange;
+        }
+
+        public Color GetValue() => _value;
+
+        public void SetValue(Color color) { _value = color; Refresh(); }
+
+        internal void StepChannel(int channel, float delta)
+        {
+            float[] ch = { _value.r, _value.g, _value.b };
+            ch[channel] = Mathf.Clamp01(ch[channel] + delta);
+            _value = new Color(ch[0], ch[1], ch[2], _value.a);
+            Refresh();
+            _onChange?.Invoke(_value);
+        }
+
+        private void Refresh()
+        {
+            float[] ch = { _value.r, _value.g, _value.b };
+
+            if (_previewPtr != IntPtr.Zero)
+            {
+                var prev = Activator.CreateInstance(UIRuntime.VisualElementType, new object[] { _previewPtr });
+                S.BgColor(UIRuntime.GetStyle(prev), _value);
+            }
+            for (int i = 0; i < 3; i++)
+            {
+                if (_fillPtrs[i] != IntPtr.Zero)
+                {
+                    var fill = Activator.CreateInstance(UIRuntime.VisualElementType, new object[] { _fillPtrs[i] });
+                    S.Width(UIRuntime.GetStyle(fill), _trackW * ch[i]);
+                }
+                if (_valuePtrs[i] != IntPtr.Zero)
+                {
+                    var lbl = Activator.CreateInstance(UIRuntime.LabelType, new object[] { _valuePtrs[i] });
+                    UIRuntime.LabelType.GetProperty("text")
+                        .SetValue(lbl, Mathf.RoundToInt(ch[i] * 255f).ToString());
+                }
+            }
+        }
+
+        public void SetVisible(bool visible)
+        {
+            if (_previewPtr == IntPtr.Zero) return;
+            var ve = Activator.CreateInstance(UIRuntime.VisualElementType, new object[] { _previewPtr });
+            S.Display(UIRuntime.GetStyle(ve), visible);
+        }
+    }
+
+
+    // ── Image ─────────────────────────────────────────────────────────────────
+    public class UIImageHandle
+    {
+        private readonly IntPtr _ptr;
+        internal UIImageHandle(IntPtr ptr) { _ptr = ptr; }
+
+        public void SetTexture(Texture2D tex)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            var ve = Activator.CreateInstance(UIRuntime.VisualElementType, new object[] { _ptr });
+            UIRuntime.SetBackgroundImage(ve, tex);
+        }
+
+        public void SetSize(float width, float height)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            var ve = Activator.CreateInstance(UIRuntime.VisualElementType, new object[] { _ptr });
+            var s = UIRuntime.GetStyle(ve);
+            S.Width(s, width);
+            S.Height(s, height);
+        }
+
+        public void SetVisible(bool visible)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            var ve = Activator.CreateInstance(UIRuntime.VisualElementType, new object[] { _ptr });
+            S.Display(UIRuntime.GetStyle(ve), visible);
+        }
     }
 }

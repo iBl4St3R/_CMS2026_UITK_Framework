@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 namespace CMS2026UITKFramework
 {
@@ -339,11 +340,7 @@ namespace CMS2026UITKFramework
             return handle;
         }
 
-        public UISliderHandle AddSlider(string label,
-                                        float min, float max,
-                                        float initial,
-                                        Action<float> onChange = null,
-                                        float step = 1f)
+        public UISliderHandle AddSlider(string label, float min, float max, float initial, Action<float> onChange = null, float step = 1f)
         {
             float clamped = Mathf.Clamp(initial, min, max);
 
@@ -421,6 +418,199 @@ namespace CMS2026UITKFramework
             return h;
         }
 
+        /// <summary>
+        /// Single-line text input field.
+        /// onSubmit fires when user presses Enter.
+        /// </summary>
+        public UITextInputHandle AddTextInput(string placeholder = "",
+                                               Action<string> onSubmit = null,
+                                               float height = ElemH)
+        {
+            var tf = Activator.CreateInstance(UIRuntime.TextFieldType);
+            var s = UIRuntime.GetStyle(tf);
+            S.Position(s, "Absolute");
+            S.Left(s, 0f); S.Top(s, _currentY);
+            S.Width(s, ContentW); S.Height(s, height);
+            S.BgColor(s, new Color(0.04f, 0.04f, 0.08f, 1f));
+            S.Color(s, new Color(0.85f, 1f, 0.85f, 1f));
+            S.Font(s);
+            UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), tf);
+
+            var handle = new UITextInputHandle(UIRuntime.GetPtr(tf));
+
+            if (!string.IsNullOrEmpty(placeholder))
+                handle.SetPlaceholder(placeholder);
+
+            if (onSubmit != null)
+            {
+                var trickleType = UIRuntime.UEAsm.GetType("UnityEngine.UIElements.TrickleDown");
+                var regMethod = UIRuntime.VisualElementType.GetMethods()
+                    .First(m => m.Name == "RegisterCallback"
+                             && m.IsGenericMethod
+                             && m.GetParameters().Length == 2)
+                    .MakeGenericMethod(typeof(UnityEngine.UIElements.KeyDownEvent));
+
+                Action<UnityEngine.UIElements.KeyDownEvent> handler = evt =>
+                {
+                    if (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter)
+                        onSubmit(handle.GetValue());
+                };
+
+                var il2cb = Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<UnityEngine.UIElements.EventCallback<UnityEngine.UIElements.KeyDownEvent>>(handler);
+
+                regMethod.Invoke(tf, new object[] { il2cb, Enum.Parse(trickleType, "TrickleDown") });
+            }
+
+            _currentY += height + ElemGap;
+            return handle;
+        }
+
+        /// <summary>
+        /// RGB color picker: preview swatch + three compact channel sliders.
+        /// step — change per click in 0–255 scale (default 5).
+        /// </summary>
+        public UIColorPickerHandle AddColorPicker(string label,
+                                                   Color initial,
+                                                   Action<Color> onChange = null,
+                                                   int step = 5)
+        {
+            const float BtnW = 22f;
+            const float BtnH = 18f;
+            const float ValW = 30f;
+            const float Gap = 3f;
+            const float ChGap = 3f;
+            float trackW = ContentW - 16f - BtnW * 2 - Gap * 3 - ValW;
+
+            // ── Row 1: name label + color preview ─────────────────────────────
+            var nameLbl = Activator.CreateInstance(UIRuntime.LabelType);
+            var nls = UIRuntime.GetStyle(nameLbl);
+            S.Position(nls, "Absolute");
+            S.Left(nls, 0f); S.Top(nls, _currentY);
+            S.Width(nls, ContentW - 32f); S.Height(nls, ElemH);
+            S.Color(nls, Color.white); S.Font(nls);
+            UIRuntime.LabelType.GetProperty("text").SetValue(nameLbl, label);
+            UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), nameLbl);
+
+            var preview = UIRuntime.NewVE();
+            var pvs = UIRuntime.GetStyle(preview);
+            S.Position(pvs, "Absolute");
+            S.Left(pvs, ContentW - 28f); S.Top(pvs, _currentY + 3f);
+            S.Width(pvs, 26f); S.Height(pvs, ElemH - 6f);
+            S.BgColor(pvs, initial);
+            UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), preview);
+
+            float rowY = _currentY + ElemH + ElemGap;
+
+            // Arrays filled in loop — handle holds references to the same arrays
+            var fillPtrs = new IntPtr[3];
+            var valuePtrs = new IntPtr[3];
+
+            var channelColors = new Color[]
+            {
+        new Color(0.80f, 0.20f, 0.20f, 1f),
+        new Color(0.20f, 0.70f, 0.20f, 1f),
+        new Color(0.20f, 0.35f, 0.80f, 1f)
+            };
+            string[] chLabels = { "R", "G", "B" };
+            float[] chValues = { initial.r, initial.g, initial.b };
+            float delta = step / 255f;
+
+            var handle = new UIColorPickerHandle(initial,
+                UIRuntime.GetPtr(preview),
+                fillPtrs, valuePtrs,
+                trackW, onChange);
+
+            for (int i = 0; i < 3; i++)
+            {
+                float y = rowY + i * (BtnH + ChGap);
+                int channel = i;
+
+                // Channel letter
+                var chLbl = Activator.CreateInstance(UIRuntime.LabelType);
+                var cls = UIRuntime.GetStyle(chLbl);
+                S.Position(cls, "Absolute");
+                S.Left(cls, 0f); S.Top(cls, y);
+                S.Width(cls, 14f); S.Height(cls, BtnH);
+                S.Color(cls, channelColors[i]); S.Font(cls);
+                UIRuntime.LabelType.GetProperty("text").SetValue(chLbl, chLabels[i]);
+                UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), chLbl);
+
+                // [−]
+                var btnMinus = MakeSmallBtn("−", 16f, y, BtnW, BtnH,
+                                   new Color(0.40f, 0.12f, 0.12f, 1f));
+
+                // Track
+                var track = UIRuntime.NewVE();
+                var ts = UIRuntime.GetStyle(track);
+                S.Position(ts, "Absolute");
+                S.Left(ts, 16f + BtnW + Gap); S.Top(ts, y);
+                S.Width(ts, trackW); S.Height(ts, BtnH);
+                S.BgColor(ts, new Color(0.18f, 0.18f, 0.22f, 1f));
+                S.Overflow(ts, "Hidden");
+                UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), track);
+
+                // Fill
+                var fill = UIRuntime.NewVE();
+                var fs = UIRuntime.GetStyle(fill);
+                S.Position(fs, "Absolute");
+                S.Left(fs, 0f); S.Top(fs, 0f);
+                S.Width(fs, trackW * chValues[i]); S.Height(fs, BtnH);
+                S.BgColor(fs, channelColors[i]);
+                UIRuntime.AddChild(track, fill);
+                fillPtrs[i] = UIRuntime.GetPtr(fill);
+
+                // [+]
+                var btnPlus = MakeSmallBtn("+",
+                                  16f + BtnW + Gap + trackW + Gap, y,
+                                  BtnW, BtnH, new Color(0.12f, 0.40f, 0.12f, 1f));
+
+                // Value label
+                var valLbl = Activator.CreateInstance(UIRuntime.LabelType);
+                var vls = UIRuntime.GetStyle(valLbl);
+                S.Position(vls, "Absolute");
+                S.Left(vls, 16f + BtnW + Gap + trackW + Gap + BtnW + Gap); S.Top(vls, y);
+                S.Width(vls, ValW); S.Height(vls, BtnH);
+                S.Color(vls, Color.white); S.Font(vls);
+                S.TextAlign(vls, TextAnchor.MiddleRight);
+                UIRuntime.LabelType.GetProperty("text")
+                    .SetValue(valLbl, Mathf.RoundToInt(chValues[i] * 255f).ToString());
+                UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), valLbl);
+                valuePtrs[i] = UIRuntime.GetPtr(valLbl);
+
+                WireClick(btnMinus, () => handle.StepChannel(channel, -delta));
+                WireClick(btnPlus, () => handle.StepChannel(channel, +delta));
+            }
+
+            _currentY = rowY + 3 * (BtnH + ChGap) + ElemGap;
+            return handle;
+        }
+
+        /// <summary>
+        /// Image display element.
+        /// width = 0 means full content width.
+        /// </summary>
+        public UIImageHandle AddImage(Texture2D texture = null,
+                                       float width = 0f,
+                                       float height = 60f)
+        {
+            float w = width > 0f ? width : ContentW;
+
+            var ve = UIRuntime.NewVE();
+            var s = UIRuntime.GetStyle(ve);
+            S.Position(s, "Absolute");
+            S.Left(s, 0f); S.Top(s, _currentY);
+            S.Width(s, w); S.Height(s, height);
+            S.BgColor(s, new Color(0f, 0f, 0f, 0f));
+            UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), ve);
+
+            if (texture != null)
+                UIRuntime.SetBackgroundImage(ve, texture);
+
+            var handle = new UIImageHandle(UIRuntime.GetPtr(ve));
+            _currentY += height + ElemGap;
+            return handle;
+        }
+
         public void AddSeparator(Color? color = null)
         {
             var sep = UIRuntime.NewVE();
@@ -432,6 +622,7 @@ namespace CMS2026UITKFramework
             UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), sep);
             _currentY += 10f + ElemGap;
         }
+
 
         public void AddSpace(float pixels = 8f) => _currentY += pixels;
 

@@ -211,5 +211,27 @@ namespace CMS2026UITKFramework
 
             return wrap;
         }
+
+
+        internal static void SetBackgroundImage(object ve, Texture2D tex)
+        {
+            if (tex == null) return;
+            try
+            {
+                var bgType = UEAsm.GetType("UnityEngine.UIElements.Background");
+                var sbgType = UEAsm.GetType("UnityEngine.UIElements.StyleBackground");
+                var fromTex = bgType.GetMethod("FromTexture2D",
+                                  BindingFlags.Public | BindingFlags.Static);
+                var il2Tex = Activator.CreateInstance(typeof(Texture2D), new object[] { tex.Pointer });
+                var bgValue = fromTex.Invoke(null, new object[] { il2Tex });
+                var sbgCtor = sbgType.GetConstructor(new[] { bgType });
+                var sbgValue = sbgCtor.Invoke(new object[] { bgValue });
+                IStyleType.GetProperty("backgroundImage").SetValue(GetStyle(ve), sbgValue);
+            }
+            catch (Exception ex)
+            {
+                FrameworkPlugin.Log.Error($"[UIRuntime] SetBackgroundImage: {ex.Message}");
+            }
+        }
     }
 }
