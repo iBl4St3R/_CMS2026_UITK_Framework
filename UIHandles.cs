@@ -177,6 +177,16 @@ namespace CMS2026UITKFramework
             }
         }
 
+        public void SeekToPosition(float localX)
+        {
+            float t = Mathf.Clamp01(localX / _trackW);
+            float raw = _min + t * (_max - _min);
+            _value = Mathf.Round(raw / _step) * _step;
+            _value = Mathf.Clamp(_value, _min, _max);
+            Refresh();
+            _onChange?.Invoke(_value);
+        }
+
         private string FormatValue(float v)
             => (_step < 1f) ? v.ToString("F1") : ((int)v).ToString();
 
@@ -290,6 +300,16 @@ namespace CMS2026UITKFramework
             var ve = Activator.CreateInstance(UIRuntime.VisualElementType, new object[] { _previewPtr });
             S.Display(UIRuntime.GetStyle(ve), visible);
         }
+
+        public void SeekChannel(int channel, float localX)
+        {
+            float[] ch = { _value.r, _value.g, _value.b };
+            ch[channel] = Mathf.Clamp01(localX / _trackW);
+            _value = new Color(ch[0], ch[1], ch[2], _value.a);
+            Refresh();
+            _onChange?.Invoke(_value);
+        }
+
     }
 
 
@@ -391,36 +411,51 @@ namespace CMS2026UITKFramework
         private string[] _options;
         private int _selected;
         private bool _open = false;
+        private int _hoveredIndex = -1;
 
-        // Pointers
         private readonly IntPtr _headerBtnPtr;
         private readonly IntPtr _listContainerPtr;
         private readonly List<IntPtr> _optionPtrs = new();
 
         private Action<int> _onChange;
+        private float _listTopInPanel;
+        private Func<float> _getScrollY;
 
         internal UIDropdownHandle(IntPtr headerBtnPtr, IntPtr listContainerPtr,
                                    string[] options, int selected,
-                                   Action<int> onChange)
+                                   Action<int> onChange,
+                                   float listTopInPanel,
+                                   Func<float> getScrollY)
         {
             _headerBtnPtr = headerBtnPtr;
             _listContainerPtr = listContainerPtr;
-            _options = options;
+            _options = options ?? Array.Empty<string>();
             _selected = selected;
             _onChange = onChange;
+            _listTopInPanel = listTopInPanel;
+            _getScrollY = getScrollY;
         }
-
-        internal void AddOptionPtr(IntPtr ptr) => _optionPtrs.Add(ptr);
 
         public int SelectedIndex => _selected;
         public string SelectedValue => (_options != null && _selected >= 0 && _selected < _options.Length)
                                         ? _options[_selected] : "";
+
+        internal void AddOptionPtr(IntPtr ptr) => _optionPtrs.Add(ptr);
+
+        internal void Toggle() => SetOpen(!_open);
+        internal void ForceClose() { if (_open) SetOpen(false); }
+
+        internal void OnHoverEnter(int index) { _hoveredIndex = index; RefreshOptionHighlights(); }
+        internal void OnHoverLeave(int index) { if (_hoveredIndex == index) _hoveredIndex = -1; RefreshOptionHighlights(); }
+
+        internal void Select(int index) { SetSelected(index); SetOpen(false); }
 
         public void SetSelected(int index)
         {
             if (_options == null || index < 0 || index >= _options.Length) return;
             _selected = index;
             RefreshHeader();
+            RefreshOptionHighlights();
             _onChange?.Invoke(_selected);
         }
 
@@ -428,33 +463,21 @@ namespace CMS2026UITKFramework
         {
             _options = options ?? Array.Empty<string>();
             _selected = Mathf.Clamp(selectedIndex, 0, Mathf.Max(0, _options.Length - 1));
-
-            // Rebuild option buttons text
             for (int i = 0; i < _optionPtrs.Count && i < _options.Length; i++)
             {
-                var btn = Activator.CreateInstance(UIRuntime.ButtonType,
-                              new object[] { _optionPtrs[i] });
+                var btn = Activator.CreateInstance(UIRuntime.ButtonType, new object[] { _optionPtrs[i] });
                 UIRuntime.ButtonType.GetProperty("text").SetValue(btn, _options[i]);
             }
             RefreshHeader();
+            RefreshOptionHighlights();
         }
 
         public void SetVisible(bool visible)
         {
             if (_headerBtnPtr == IntPtr.Zero) return;
-            var btn = Activator.CreateInstance(UIRuntime.ButtonType,
-                          new object[] { _headerBtnPtr });
+            var btn = Activator.CreateInstance(UIRuntime.ButtonType, new object[] { _headerBtnPtr });
             S.Display(UIRuntime.GetStyle(btn), visible);
             if (!visible) SetOpen(false);
-        }
-
-        // Called by header button click
-        internal void Toggle() => SetOpen(!_open);
-
-        internal void Select(int index)
-        {
-            SetSelected(index);
-            SetOpen(false);
         }
 
         private void SetOpen(bool open)
@@ -463,6 +486,12 @@ namespace CMS2026UITKFramework
             if (_listContainerPtr == IntPtr.Zero) return;
             var container = Activator.CreateInstance(UIRuntime.VisualElementType,
                                 new object[] { _listContainerPtr });
+            if (open)
+            {
+                float top = _listTopInPanel - (_getScrollY?.Invoke() ?? 0f);
+                S.Top(UIRuntime.GetStyle(container), top);
+                RefreshOptionHighlights();
+            }
             S.Display(UIRuntime.GetStyle(container), open);
             RefreshHeader();
         }
@@ -470,12 +499,35 @@ namespace CMS2026UITKFramework
         private void RefreshHeader()
         {
             if (_headerBtnPtr == IntPtr.Zero) return;
-            var btn = Activator.CreateInstance(UIRuntime.ButtonType,
-                          new object[] { _headerBtnPtr });
-            string arrow = _open ? "▲" : "▼";
-            string label = SelectedValue;
+            var btn = Activator.CreateInstance(UIRuntime.ButtonType, new object[] { _headerBtnPtr });
             UIRuntime.ButtonType.GetProperty("text")
-                .SetValue(btn, $"{label}  {arrow}");
+                .SetValue(btn, $"{SelectedValue}  {(_open ? "▲" : "▼")}");
         }
+
+        private void RefreshOptionHighlights()
+        {
+            for (int i = 0; i < _optionPtrs.Count; i++)
+            {
+                if (_optionPtrs[i] == IntPtr.Zero) continue;
+                var btn = Activator.CreateInstance(UIRuntime.ButtonType, new object[] { _optionPtrs[i] });
+                Color bg = i == _hoveredIndex ? new Color(0.28f, 0.48f, 0.72f, 1f) :
+                           i == _selected ? new Color(0.20f, 0.35f, 0.55f, 1f) :
+                                                new Color(0.10f, 0.14f, 0.22f, 1f);
+                S.BgColor(UIRuntime.GetStyle(btn), bg);
+            }
+        }
+
+        /// <summary>
+        /// Zwraca true jeśli dropdown jest otwarty i kursor uitY jest nad jego listą.
+        /// panelY — pozycja Y górnej krawędzi panelu w przestrzeni UI.
+        /// </summary>
+        internal bool IsOpenAndContains(float uitY, float panelY)
+        {
+            if (!_open) return false;
+            float listTop = panelY + _listTopInPanel;
+            float listBottom = listTop + (_optionPtrs.Count * 24f); // OptionH = 24
+            return uitY >= listTop && uitY <= listBottom;
+        }
+
     }
 }

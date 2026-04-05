@@ -39,7 +39,7 @@ namespace CMS2026UITKFramework
         private const float ScrollStep = 40f;
 
         private float ViewportH => _height - TitleH - Pad * 2;
-        private float ContentW => _width - Pad * 2;
+        private float ContentW => _width - Pad * 3 - SbW;
 
         // ── Scroll ─────────────────────────────────────────────────────────
         private float _scrollY = 0f;
@@ -48,6 +48,12 @@ namespace CMS2026UITKFramework
         private bool _dragWhenScrollable = false;
         private IntPtr _scrollTrackPtr;
         private IntPtr _scrollThumbPtr;
+
+
+
+        // ── Dropdown ─────────────────────────────────────────────────────────
+        private readonly List<UIDropdownHandle> _dropdownHandles = new();
+        
 
         // ── Update callback ────────────────────────────────────────────────────────
         private Action<float> _updateCallback;
@@ -258,9 +264,7 @@ namespace CMS2026UITKFramework
         //  FLUENT ELEMENT API
         // ══════════════════════════════════════════════════════════════════
 
-        public UILabelHandle AddLabel(string text,
-                                      Color? color = null,
-                                      float height = ElemH)
+        public UILabelHandle AddLabel(string text, Color? color = null, float height = ElemH)
         {
             var lbl = Activator.CreateInstance(UIRuntime.LabelType);
             var s = UIRuntime.GetStyle(lbl);
@@ -413,16 +417,20 @@ namespace CMS2026UITKFramework
                               BtnW, BtnH, new Color(0.15f, 0.40f, 0.15f, 1f));
 
             var handle = new UISliderHandle(
-                UIRuntime.GetPtr(fill),
-                UIRuntime.GetPtr(valLbl),
-                min, max, clamped, step, trackW, onChange);
+        UIRuntime.GetPtr(fill),
+        UIRuntime.GetPtr(valLbl),
+        min, max, clamped, step, trackW, onChange);
 
             WireClick(btnMinus, () => handle.Step(-step));
             WireClick(btnPlus, () => handle.Step(+step));
+            RegisterDragOnTrack(track, trackW, lx => handle.SeekToPosition(lx)); // ← SeekToPosition, nie SeekChannel
 
             _currentY = row2Y + BtnH + ElemGap;
             return handle;
         }
+
+
+
 
         public UILabelHandle AddHeader(string text, Color? color = null)
         {
@@ -482,10 +490,7 @@ namespace CMS2026UITKFramework
         /// RGB color picker: preview swatch + three compact channel sliders.
         /// step — change per click in 0–255 scale (default 5).
         /// </summary>
-        public UIColorPickerHandle AddColorPicker(string label,
-                                                   Color initial,
-                                                   Action<Color> onChange = null,
-                                                   int step = 5)
+        public UIColorPickerHandle AddColorPicker(string label, Color initial, Action<Color> onChange = null, int step = 5)
         {
             const float BtnW = 22f;
             const float BtnH = 18f;
@@ -573,9 +578,7 @@ namespace CMS2026UITKFramework
                 fillPtrs[i] = UIRuntime.GetPtr(fill);
 
                 // [+]
-                var btnPlus = MakeSmallBtn("+",
-                                  16f + BtnW + Gap + trackW + Gap, y,
-                                  BtnW, BtnH, new Color(0.12f, 0.40f, 0.12f, 1f));
+                var btnPlus = MakeSmallBtn("+", 16f + BtnW + Gap + trackW + Gap, y, BtnW, BtnH, new Color(0.12f, 0.40f, 0.12f, 1f));
 
                 // Value label
                 var valLbl = Activator.CreateInstance(UIRuntime.LabelType);
@@ -585,14 +588,19 @@ namespace CMS2026UITKFramework
                 S.Width(vls, ValW); S.Height(vls, BtnH);
                 S.Color(vls, Color.white); S.Font(vls);
                 S.TextAlign(vls, TextAnchor.MiddleRight);
-                UIRuntime.LabelType.GetProperty("text")
-                    .SetValue(valLbl, Mathf.RoundToInt(chValues[i] * 255f).ToString());
+                UIRuntime.LabelType.GetProperty("text").SetValue(valLbl, Mathf.RoundToInt(chValues[i] * 255f).ToString());
                 UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), valLbl);
                 valuePtrs[i] = UIRuntime.GetPtr(valLbl);
 
                 WireClick(btnMinus, () => handle.StepChannel(channel, -delta));
                 WireClick(btnPlus, () => handle.StepChannel(channel, +delta));
+
+                int capturedChannel = channel;
+                float capturedW = trackW;
+                RegisterDragOnTrack(track, capturedW, lx => handle.SeekChannel(capturedChannel, lx));
             }
+
+
 
             _currentY = rowY + 3 * (BtnH + ChGap) + ElemGap;
             return handle;
@@ -686,24 +694,26 @@ namespace CMS2026UITKFramework
                 ContentW, clamped, fc);
         }
 
+
+
+
         /// <summary>
         /// Dropdown list. Expands downward over other content when open.
         /// maxVisible — how many options shown before list clips (default 5).
         /// </summary>
         public UIDropdownHandle AddDropdown(string label,
-                                             string[] options,
-                                             int selectedIndex = 0,
-                                             Action<int> onChange = null,
-                                             int maxVisible = 5)
+                                     string[] options,
+                                     int selectedIndex = 0,
+                                     Action<int> onChange = null,
+                                     int maxVisible = 5)
         {
             options ??= Array.Empty<string>();
             int sel = Mathf.Clamp(selectedIndex, 0, Mathf.Max(0, options.Length - 1));
-            string selectedText = options.Length > 0 ? options[sel] : "—";
 
             const float BtnH = 26f;
             const float OptionH = 24f;
 
-            // Row label
+            // Nazwa sekcji
             var nameLbl = Activator.CreateInstance(UIRuntime.LabelType);
             var nls = UIRuntime.GetStyle(nameLbl);
             S.Position(nls, "Absolute");
@@ -715,7 +725,7 @@ namespace CMS2026UITKFramework
 
             float btnY = _currentY + ElemH + ElemGap;
 
-            // Header button (shows selected + arrow)
+            // Header button
             var headerBtn = Activator.CreateInstance(UIRuntime.ButtonType);
             var hbs = UIRuntime.GetStyle(headerBtn);
             S.Position(hbs, "Absolute");
@@ -726,33 +736,47 @@ namespace CMS2026UITKFramework
             S.TextAlign(hbs, TextAnchor.MiddleLeft);
             S.Padding(hbs, 4f);
             UIRuntime.ButtonType.GetProperty("text")
-                .SetValue(headerBtn, $"{selectedText}  ▼");
+                .SetValue(headerBtn, $"{(options.Length > 0 ? options[sel] : "—")}  ▼");
             UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), headerBtn);
 
-            // List container — absolutely positioned, layered on top, hidden by default
+            // Lista — dodana do PANELU (nie content) żeby nie była clipped przez viewport
             float listH = Mathf.Min(options.Length, maxVisible) * OptionH;
+
+            // Pozycja listy w przestrzeni panelu
+            float listTopInPanel = TitleH + Pad + btnY + BtnH;
+
             var listContainer = UIRuntime.NewVE();
             var lcs = UIRuntime.GetStyle(listContainer);
             S.Position(lcs, "Absolute");
-            S.Left(lcs, 0f);
-            S.Top(lcs, btnY + BtnH);   // directly below header button
+            S.Left(lcs, Pad);
+            S.Top(lcs, listTopInPanel);
             S.Width(lcs, ContentW);
             S.Height(lcs, listH);
             S.BgColor(lcs, new Color(0.10f, 0.14f, 0.22f, 0.98f));
             S.Overflow(lcs, "Hidden");
-            S.Display(lcs, false);     // starts hidden
-            UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), listContainer);
+            S.Display(lcs, false);
+            // ← dodaj do PANELU, nie do contentPtr
+            UIRuntime.AddChild(UIRuntime.WrapVE(_panelPtr), listContainer);
 
-            // Create handle early so option click closures can reference it
             var handle = new UIDropdownHandle(
                 UIRuntime.GetPtr(headerBtn),
                 UIRuntime.GetPtr(listContainer),
-                options, sel, onChange);
+                options, sel, onChange,
+                listTopInPanel,
+                () => _scrollY);
 
-            // Wire header button
             WireClick(headerBtn, () => handle.Toggle());
 
-            // Option buttons inside list
+            // Typy do hover
+            var ue = UIRuntime.UEAsm;
+            var trickle = ue.GetType("UnityEngine.UIElements.TrickleDown");
+            var enterType = ue.GetType("UnityEngine.UIElements.PointerEnterEvent");
+            var leaveType = ue.GetType("UnityEngine.UIElements.PointerLeaveEvent");
+            var regBase = UIRuntime.VisualElementType.GetMethods()
+                                .First(m => m.Name == "RegisterCallback"
+                                         && m.IsGenericMethod
+                                         && m.GetParameters().Length == 2);
+
             for (int i = 0; i < options.Length; i++)
             {
                 int idx = i;
@@ -762,21 +786,40 @@ namespace CMS2026UITKFramework
                 S.Left(obs, 0f); S.Top(obs, i * OptionH);
                 S.Width(obs, ContentW); S.Height(obs, OptionH);
                 S.BgColor(obs, i == sel
-                    ? new Color(0.20f, 0.35f, 0.55f, 1f)    // selected highlight
+                    ? new Color(0.20f, 0.35f, 0.55f, 1f)
                     : new Color(0.10f, 0.14f, 0.22f, 1f));
                 S.Color(obs, Color.white); S.Font(obs);
                 S.TextAlign(obs, TextAnchor.MiddleLeft);
                 S.Padding(obs, 4f);
                 UIRuntime.ButtonType.GetProperty("text").SetValue(optBtn, options[i]);
-
                 WireClick(optBtn, () => handle.Select(idx));
+
+                // Hover
+                try
+                {
+                    var enterReg = regBase.MakeGenericMethod(enterType);
+                    Action<UnityEngine.UIElements.PointerEnterEvent> enterH =
+                        _ => handle.OnHoverEnter(idx);
+                    enterReg.Invoke(optBtn, new object[] {
+                Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<
+                    UnityEngine.UIElements.EventCallback<UnityEngine.UIElements.PointerEnterEvent>>(enterH),
+                Enum.Parse(trickle, "TrickleDown") });
+
+                    var leaveReg = regBase.MakeGenericMethod(leaveType);
+                    Action<UnityEngine.UIElements.PointerLeaveEvent> leaveH =
+                        _ => handle.OnHoverLeave(idx);
+                    leaveReg.Invoke(optBtn, new object[] {
+                Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<UnityEngine.UIElements.EventCallback<UnityEngine.UIElements.PointerLeaveEvent>>(leaveH),
+                Enum.Parse(trickle, "TrickleDown") });
+                }
+                catch { }
+
                 UIRuntime.AddChild(listContainer, optBtn);
                 handle.AddOptionPtr(UIRuntime.GetPtr(optBtn));
             }
 
-            // Reserve space only for header button (list overlays other content)
+            _dropdownHandles.Add(handle);
             _currentY = btnY + BtnH + ElemGap;
-
             return handle;
         }
 
@@ -843,7 +886,7 @@ namespace CMS2026UITKFramework
             if (!_visible) return;
             HandleScroll();
             HandleDrag();
-            _updateCallback?.Invoke(Time.deltaTime); // ← dodaj tę linię
+            _updateCallback?.Invoke(Time.deltaTime);
         }
 
         // ── Internals ──────────────────────────────────────────────────────
@@ -857,22 +900,121 @@ namespace CMS2026UITKFramework
         private void HandleScroll()
         {
             if (!IsScrollable) return;
-
             float delta = Input.mouseScrollDelta.y;
             if (Mathf.Abs(delta) < 0.01f) return;
 
-            // Only scroll when cursor is inside this panel
             Vector2 mp = Input.mousePosition;
             float uitY = Screen.height - mp.y;
             bool inPanel = mp.x >= _x && mp.x <= _x + _width
                         && uitY >= _y && uitY <= _y + _height;
             if (!inPanel) return;
 
+            // ── Jeśli kursor jest nad otwartą listą dropdown — nie scrolluj ───────
+            foreach (var dd in _dropdownHandles)
+            {
+                if (dd.IsOpenAndContains(uitY, _y))
+                    return;   // scroll pochłonięty przez dropdown, nic nie rób
+            }
+
+            // ── Zamknij dropdowny i scrolluj ──────────────────────────────────────
+            foreach (var dd in _dropdownHandles) dd.ForceClose();
+
             float max = Mathf.Max(0f, _currentY - ViewportH);
             _scrollY = Mathf.Clamp(_scrollY - delta * ScrollStep, 0f, max);
             ApplyScroll();
             UpdateScrollbar();
         }
+
+
+
+        private void RegisterDragOnTrack(object track, float trackW, Action<float> onLocalX)
+        {
+            try
+            {
+                var ue = UIRuntime.UEAsm;
+                var trickle = ue.GetType("UnityEngine.UIElements.TrickleDown");
+                var pDownType = ue.GetType("UnityEngine.UIElements.PointerDownEvent");
+                var pMoveType = ue.GetType("UnityEngine.UIElements.PointerMoveEvent");
+                var pUpType = ue.GetType("UnityEngine.UIElements.PointerUpEvent");
+                var pLeaveType = ue.GetType("UnityEngine.UIElements.PointerLeaveEvent"); // NOWE
+
+                var regBase = UIRuntime.VisualElementType.GetMethods()
+                                    .First(m => m.Name == "RegisterCallback"
+                                             && m.IsGenericMethod
+                                             && m.GetParameters().Length == 2);
+                var capMethod = UIRuntime.VisualElementType.GetMethod("CapturePointer");
+                var relMethod = UIRuntime.VisualElementType.GetMethod("ReleasePointer");
+
+                // Metoda StopPropagation na EventBase — blokuje scroll gdy przeciągamy
+                var stopPropMethod = ue.GetType("UnityEngine.UIElements.EventBase")
+                                       ?.GetMethod("StopPropagation");
+
+                bool pressing = false;
+
+                // ── PointerDown ────────────────────────────────────────────────────
+                var downReg = regBase.MakeGenericMethod(pDownType);
+                Action<UnityEngine.UIElements.PointerDownEvent> downH = evt =>
+                {
+                    pressing = true;
+                    onLocalX(Mathf.Clamp(evt.localPosition.x, 0f, trackW));
+                    capMethod?.Invoke(track, new object[] { evt.pointerId });
+                    try { stopPropMethod?.Invoke(evt, null); } catch { }  // zatrzymaj scroll
+                };
+                downReg.Invoke(track, new object[] {
+            Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<UnityEngine.UIElements.EventCallback<UnityEngine.UIElements.PointerDownEvent>>(downH),
+            Enum.Parse(trickle, "TrickleDown") });
+
+                // ── PointerMove ────────────────────────────────────────────────────
+                var moveReg = regBase.MakeGenericMethod(pMoveType);
+                Action<UnityEngine.UIElements.PointerMoveEvent> moveH = evt =>
+                {
+                    // Guard: jeśli LMB już nie jest wciśnięty — przerwij
+                    if (!Input.GetMouseButton(0))
+                    {
+                        if (pressing)
+                        {
+                            pressing = false;
+                            try { relMethod?.Invoke(track, new object[] { evt.pointerId }); } catch { }
+                        }
+                        return;
+                    }
+                    if (!pressing) return;
+                    onLocalX(Mathf.Clamp(evt.localPosition.x, 0f, trackW));
+                };
+                moveReg.Invoke(track, new object[] {
+            Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<UnityEngine.UIElements.EventCallback<UnityEngine.UIElements.PointerMoveEvent>>(moveH),
+            Enum.Parse(trickle, "TrickleDown") });
+
+                // ── PointerUp ──────────────────────────────────────────────────────
+                var upReg = regBase.MakeGenericMethod(pUpType);
+                Action<UnityEngine.UIElements.PointerUpEvent> upH = evt =>
+                {
+                    pressing = false;
+                    try { relMethod?.Invoke(track, new object[] { evt.pointerId }); } catch { }
+                };
+                upReg.Invoke(track, new object[] {
+            Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<UnityEngine.UIElements.EventCallback<UnityEngine.UIElements.PointerUpEvent>>(upH),
+            Enum.Parse(trickle, "TrickleDown") });
+
+                // ── PointerLeave — guard gdy kursor wyjedzie za element ────────────
+                var leaveReg = regBase.MakeGenericMethod(pLeaveType);
+                Action<UnityEngine.UIElements.PointerLeaveEvent> leaveH = evt =>
+                {
+                    // Zwalniamy tylko jeśli LMB już nie wciśnięty
+                    // (jeśli wciśnięty — capture trzyma eventy, kontynuujemy)
+                    if (!Input.GetMouseButton(0))
+                    {
+                        pressing = false;
+                        try { relMethod?.Invoke(track, new object[] { evt.pointerId }); } catch { }
+                    }
+                };
+                leaveReg.Invoke(track, new object[] {
+            Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<UnityEngine.UIElements.EventCallback<UnityEngine.UIElements.PointerLeaveEvent>>(leaveH),Enum.Parse(trickle, "TrickleDown") });
+            }
+            catch (Exception ex) { FrameworkPlugin.Log.Warning("[DragTrack] " + ex.Message); }
+        }
+
+
 
         private void ApplyScroll()
         {
