@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace CMS2026UITKFramework
 {
@@ -319,6 +320,162 @@ namespace CMS2026UITKFramework
             if (_ptr == IntPtr.Zero) return;
             var ve = Activator.CreateInstance(UIRuntime.VisualElementType, new object[] { _ptr });
             S.Display(UIRuntime.GetStyle(ve), visible);
+        }
+    }
+
+    // ── ProgressBar ───────────────────────────────────────────────────────────
+    public class UIProgressBarHandle
+    {
+        private float _value;           // 0–1
+        private readonly IntPtr _fillPtr;
+        private readonly IntPtr _labelPtr;
+        private readonly float _trackW;
+        private Color _fillColor;
+
+        internal UIProgressBarHandle(IntPtr fillPtr, IntPtr labelPtr,
+                                      float trackW, float initial, Color fillColor)
+        {
+            _fillPtr = fillPtr;
+            _labelPtr = labelPtr;
+            _trackW = trackW;
+            _fillColor = fillColor;
+            _value = Mathf.Clamp01(initial);
+        }
+
+        /// <summary>value in 0–1 range</summary>
+        public void SetValue(float value)
+        {
+            _value = Mathf.Clamp01(value);
+            Refresh();
+        }
+
+        public float Value => _value;
+
+        public void SetColor(Color color)
+        {
+            _fillColor = color;
+            Refresh();
+        }
+
+        public void SetVisible(bool visible)
+        {
+            if (_fillPtr == IntPtr.Zero) return;
+            // We hide fill; label hides itself when no ptr
+            var ve = Activator.CreateInstance(UIRuntime.VisualElementType,
+                         new object[] { _fillPtr });
+            S.Display(UIRuntime.GetStyle(ve), visible);
+        }
+
+        private void Refresh()
+        {
+            if (_fillPtr != IntPtr.Zero)
+            {
+                var fill = Activator.CreateInstance(UIRuntime.VisualElementType,
+                               new object[] { _fillPtr });
+                S.Width(UIRuntime.GetStyle(fill), _trackW * _value);
+                S.BgColor(UIRuntime.GetStyle(fill), _fillColor);
+            }
+            if (_labelPtr != IntPtr.Zero)
+            {
+                var lbl = Activator.CreateInstance(UIRuntime.LabelType,
+                              new object[] { _labelPtr });
+                UIRuntime.LabelType.GetProperty("text")
+                    .SetValue(lbl, Mathf.RoundToInt(_value * 100f) + "%");
+            }
+        }
+    }
+
+    // ── Dropdown ──────────────────────────────────────────────────────────────
+    public class UIDropdownHandle
+    {
+        private string[] _options;
+        private int _selected;
+        private bool _open = false;
+
+        // Pointers
+        private readonly IntPtr _headerBtnPtr;
+        private readonly IntPtr _listContainerPtr;
+        private readonly List<IntPtr> _optionPtrs = new();
+
+        private Action<int> _onChange;
+
+        internal UIDropdownHandle(IntPtr headerBtnPtr, IntPtr listContainerPtr,
+                                   string[] options, int selected,
+                                   Action<int> onChange)
+        {
+            _headerBtnPtr = headerBtnPtr;
+            _listContainerPtr = listContainerPtr;
+            _options = options;
+            _selected = selected;
+            _onChange = onChange;
+        }
+
+        internal void AddOptionPtr(IntPtr ptr) => _optionPtrs.Add(ptr);
+
+        public int SelectedIndex => _selected;
+        public string SelectedValue => (_options != null && _selected >= 0 && _selected < _options.Length)
+                                        ? _options[_selected] : "";
+
+        public void SetSelected(int index)
+        {
+            if (_options == null || index < 0 || index >= _options.Length) return;
+            _selected = index;
+            RefreshHeader();
+            _onChange?.Invoke(_selected);
+        }
+
+        public void SetOptions(string[] options, int selectedIndex = 0)
+        {
+            _options = options ?? Array.Empty<string>();
+            _selected = Mathf.Clamp(selectedIndex, 0, Mathf.Max(0, _options.Length - 1));
+
+            // Rebuild option buttons text
+            for (int i = 0; i < _optionPtrs.Count && i < _options.Length; i++)
+            {
+                var btn = Activator.CreateInstance(UIRuntime.ButtonType,
+                              new object[] { _optionPtrs[i] });
+                UIRuntime.ButtonType.GetProperty("text").SetValue(btn, _options[i]);
+            }
+            RefreshHeader();
+        }
+
+        public void SetVisible(bool visible)
+        {
+            if (_headerBtnPtr == IntPtr.Zero) return;
+            var btn = Activator.CreateInstance(UIRuntime.ButtonType,
+                          new object[] { _headerBtnPtr });
+            S.Display(UIRuntime.GetStyle(btn), visible);
+            if (!visible) SetOpen(false);
+        }
+
+        // Called by header button click
+        internal void Toggle() => SetOpen(!_open);
+
+        internal void Select(int index)
+        {
+            SetSelected(index);
+            SetOpen(false);
+        }
+
+        private void SetOpen(bool open)
+        {
+            _open = open;
+            if (_listContainerPtr == IntPtr.Zero) return;
+            var container = Activator.CreateInstance(UIRuntime.VisualElementType,
+                                new object[] { _listContainerPtr });
+            S.Display(UIRuntime.GetStyle(container), open);
+            RefreshHeader();
+        }
+
+        private void RefreshHeader()
+        {
+            if (_headerBtnPtr == IntPtr.Zero) return;
+            var btn = Activator.CreateInstance(UIRuntime.ButtonType,
+                          new object[] { _headerBtnPtr });
+            string arrow = _open ? "▲" : "▼";
+            string label = SelectedValue;
+            UIRuntime.ButtonType.GetProperty("text")
+                .SetValue(btn, $"{label}  {arrow}");
         }
     }
 }

@@ -49,6 +49,9 @@ namespace CMS2026UITKFramework
         private IntPtr _scrollTrackPtr;
         private IntPtr _scrollThumbPtr;
 
+        // ── Update callback ────────────────────────────────────────────────────────
+        private Action<float> _updateCallback;
+
         /// <summary>True when content is currently scrollable (based on mode and content height).</summary>
         private bool IsScrollable =>
             _scrollMode == ScrollMode.Always || _currentY > ViewportH;
@@ -174,6 +177,16 @@ namespace CMS2026UITKFramework
             S.BgColor(ths, new Color(0.40f, 0.40f, 0.55f, 0.9f));
             UIRuntime.AddChild(track, thumb);
             _scrollThumbPtr = UIRuntime.GetPtr(thumb);
+        }
+
+        /// <summary>
+        /// Called every frame while panel is visible.
+        /// deltaTime = Time.deltaTime — use for animations, live data refresh.
+        /// </summary>
+        public UIPanel SetUpdateCallback(Action<float> callback)
+        {
+            _updateCallback = callback;
+            return this;
         }
 
         // ══════════════════════════════════════════════════════════════════
@@ -611,6 +624,162 @@ namespace CMS2026UITKFramework
             return handle;
         }
 
+        /// <summary>
+        /// Horizontal progress bar. value: 0.0–1.0
+        /// </summary>
+        public UIProgressBarHandle AddProgressBar(string label,
+                                                   float initial = 0f,
+                                                   Color? fillColor = null,
+                                                   float height = ElemH)
+        {
+            Color fc = fillColor ?? new Color(0.20f, 0.65f, 0.30f, 1f);
+            float clamped = Mathf.Clamp01(initial);
+
+            // Label row
+            var nameLbl = Activator.CreateInstance(UIRuntime.LabelType);
+            var nls = UIRuntime.GetStyle(nameLbl);
+            S.Position(nls, "Absolute");
+            S.Left(nls, 0f); S.Top(nls, _currentY);
+            S.Width(nls, ContentW - 44f); S.Height(nls, ElemH);
+            S.Color(nls, Color.white); S.Font(nls);
+            UIRuntime.LabelType.GetProperty("text").SetValue(nameLbl, label);
+            UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), nameLbl);
+
+            // Percent label (right side)
+            var pctLbl = Activator.CreateInstance(UIRuntime.LabelType);
+            var pls = UIRuntime.GetStyle(pctLbl);
+            S.Position(pls, "Absolute");
+            S.Left(pls, ContentW - 40f); S.Top(pls, _currentY);
+            S.Width(pls, 40f); S.Height(pls, ElemH);
+            S.Color(pls, new Color(0.80f, 1.00f, 0.80f, 1f)); S.Font(pls);
+            S.TextAlign(pls, TextAnchor.MiddleRight);
+            UIRuntime.LabelType.GetProperty("text")
+                .SetValue(pctLbl, Mathf.RoundToInt(clamped * 100f) + "%");
+            UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), pctLbl);
+
+            float trackY = _currentY + ElemH + ElemGap;
+
+            // Track
+            var track = UIRuntime.NewVE();
+            var ts = UIRuntime.GetStyle(track);
+            S.Position(ts, "Absolute");
+            S.Left(ts, 0f); S.Top(ts, trackY);
+            S.Width(ts, ContentW); S.Height(ts, height);
+            S.BgColor(ts, new Color(0.15f, 0.15f, 0.18f, 1f));
+            S.Overflow(ts, "Hidden");
+            UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), track);
+
+            // Fill
+            var fill = UIRuntime.NewVE();
+            var fs = UIRuntime.GetStyle(fill);
+            S.Position(fs, "Absolute");
+            S.Left(fs, 0f); S.Top(fs, 0f);
+            S.Width(fs, ContentW * clamped); S.Height(fs, height);
+            S.BgColor(fs, fc);
+            UIRuntime.AddChild(track, fill);
+
+            _currentY = trackY + height + ElemGap;
+
+            return new UIProgressBarHandle(
+                UIRuntime.GetPtr(fill),
+                UIRuntime.GetPtr(pctLbl),
+                ContentW, clamped, fc);
+        }
+
+        /// <summary>
+        /// Dropdown list. Expands downward over other content when open.
+        /// maxVisible — how many options shown before list clips (default 5).
+        /// </summary>
+        public UIDropdownHandle AddDropdown(string label,
+                                             string[] options,
+                                             int selectedIndex = 0,
+                                             Action<int> onChange = null,
+                                             int maxVisible = 5)
+        {
+            options ??= Array.Empty<string>();
+            int sel = Mathf.Clamp(selectedIndex, 0, Mathf.Max(0, options.Length - 1));
+            string selectedText = options.Length > 0 ? options[sel] : "—";
+
+            const float BtnH = 26f;
+            const float OptionH = 24f;
+
+            // Row label
+            var nameLbl = Activator.CreateInstance(UIRuntime.LabelType);
+            var nls = UIRuntime.GetStyle(nameLbl);
+            S.Position(nls, "Absolute");
+            S.Left(nls, 0f); S.Top(nls, _currentY);
+            S.Width(nls, ContentW); S.Height(nls, ElemH);
+            S.Color(nls, Color.white); S.Font(nls);
+            UIRuntime.LabelType.GetProperty("text").SetValue(nameLbl, label);
+            UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), nameLbl);
+
+            float btnY = _currentY + ElemH + ElemGap;
+
+            // Header button (shows selected + arrow)
+            var headerBtn = Activator.CreateInstance(UIRuntime.ButtonType);
+            var hbs = UIRuntime.GetStyle(headerBtn);
+            S.Position(hbs, "Absolute");
+            S.Left(hbs, 0f); S.Top(hbs, btnY);
+            S.Width(hbs, ContentW); S.Height(hbs, BtnH);
+            S.BgColor(hbs, new Color(0.12f, 0.18f, 0.28f, 1f));
+            S.Color(hbs, Color.white); S.Font(hbs);
+            S.TextAlign(hbs, TextAnchor.MiddleLeft);
+            S.Padding(hbs, 4f);
+            UIRuntime.ButtonType.GetProperty("text")
+                .SetValue(headerBtn, $"{selectedText}  ▼");
+            UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), headerBtn);
+
+            // List container — absolutely positioned, layered on top, hidden by default
+            float listH = Mathf.Min(options.Length, maxVisible) * OptionH;
+            var listContainer = UIRuntime.NewVE();
+            var lcs = UIRuntime.GetStyle(listContainer);
+            S.Position(lcs, "Absolute");
+            S.Left(lcs, 0f);
+            S.Top(lcs, btnY + BtnH);   // directly below header button
+            S.Width(lcs, ContentW);
+            S.Height(lcs, listH);
+            S.BgColor(lcs, new Color(0.10f, 0.14f, 0.22f, 0.98f));
+            S.Overflow(lcs, "Hidden");
+            S.Display(lcs, false);     // starts hidden
+            UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), listContainer);
+
+            // Create handle early so option click closures can reference it
+            var handle = new UIDropdownHandle(
+                UIRuntime.GetPtr(headerBtn),
+                UIRuntime.GetPtr(listContainer),
+                options, sel, onChange);
+
+            // Wire header button
+            WireClick(headerBtn, () => handle.Toggle());
+
+            // Option buttons inside list
+            for (int i = 0; i < options.Length; i++)
+            {
+                int idx = i;
+                var optBtn = Activator.CreateInstance(UIRuntime.ButtonType);
+                var obs = UIRuntime.GetStyle(optBtn);
+                S.Position(obs, "Absolute");
+                S.Left(obs, 0f); S.Top(obs, i * OptionH);
+                S.Width(obs, ContentW); S.Height(obs, OptionH);
+                S.BgColor(obs, i == sel
+                    ? new Color(0.20f, 0.35f, 0.55f, 1f)    // selected highlight
+                    : new Color(0.10f, 0.14f, 0.22f, 1f));
+                S.Color(obs, Color.white); S.Font(obs);
+                S.TextAlign(obs, TextAnchor.MiddleLeft);
+                S.Padding(obs, 4f);
+                UIRuntime.ButtonType.GetProperty("text").SetValue(optBtn, options[i]);
+
+                WireClick(optBtn, () => handle.Select(idx));
+                UIRuntime.AddChild(listContainer, optBtn);
+                handle.AddOptionPtr(UIRuntime.GetPtr(optBtn));
+            }
+
+            // Reserve space only for header button (list overlays other content)
+            _currentY = btnY + BtnH + ElemGap;
+
+            return handle;
+        }
+
         public void AddSeparator(Color? color = null)
         {
             var sep = UIRuntime.NewVE();
@@ -674,6 +843,7 @@ namespace CMS2026UITKFramework
             if (!_visible) return;
             HandleScroll();
             HandleDrag();
+            _updateCallback?.Invoke(Time.deltaTime); // ← dodaj tę linię
         }
 
         // ── Internals ──────────────────────────────────────────────────────
