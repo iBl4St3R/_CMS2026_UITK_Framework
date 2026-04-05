@@ -14,6 +14,7 @@ namespace CMS2026UITKFramework
     public class UIPanel
     {
         // ── Layout ─────────────────────────────────────────────────────────
+        public string Title => _title;
         private GameObject _go;
         private IntPtr _panelPtr;
         private IntPtr _rootPtr;

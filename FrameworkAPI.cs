@@ -28,7 +28,23 @@ namespace CMS2026UITKFramework
                                           float width, float height)
             => UIPanel.Create(title, x, y, width, height);
 
-        // Kolejne metody będą tu dodawane wraz z rozwojem frameworka:
-        // AddLabel, AddButton, AddToggle, AddSlider...
+        /// <summary>
+        /// Returns the first active panel with the given title, or null if not found.
+        /// </summary>
+        public static UIPanel GetPanel(string title)
+            => FrameworkPlugin.ActivePanels.Find(p => p != null && p.Title == title);
+
+        /// <summary>
+        /// Destroys the first active panel with the given title.
+        /// Returns true if found and destroyed.
+        /// </summary>
+        public static bool DestroyPanel(string title)
+        {
+            var panel = GetPanel(title);
+            if (panel == null) return false;
+            panel.Destroy();
+            return true;
+        }
+
     }
 }
