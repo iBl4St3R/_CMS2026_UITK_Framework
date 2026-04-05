@@ -18,6 +18,9 @@ namespace CMS2026UITKFramework
         public string Title => _title;
         private GameObject _go;
         private IntPtr _panelPtr;
+
+        public IntPtr GetPanelRawPtr() => _panelPtr;
+
         private IntPtr _rootPtr;
         private IntPtr _viewportPtr;   // clipping window — fixed height
         private IntPtr _contentPtr;    // grows with added elements
@@ -29,6 +32,7 @@ namespace CMS2026UITKFramework
         private bool _dragging;
         private Vector2 _dragOffset;
 
+        private object _panelSettings;
         private float _currentY = 0f;
 
         private const float TitleH = 24f;
@@ -53,7 +57,7 @@ namespace CMS2026UITKFramework
 
         // ── Dropdown ─────────────────────────────────────────────────────────
         private readonly List<UIDropdownHandle> _dropdownHandles = new();
-        
+
 
         // ── Update callback ────────────────────────────────────────────────────────
         private Action<float> _updateCallback;
@@ -64,7 +68,8 @@ namespace CMS2026UITKFramework
 
         // ── Factory ────────────────────────────────────────────────────────
         public static UIPanel Create(string title, float x, float y,
-                                     float width, float height)
+                                     float width, float height,
+                                     int sortOrder = 9999)
         {
             if (!UIRuntime.IsAvailable)
             {
@@ -80,13 +85,15 @@ namespace CMS2026UITKFramework
                 _height = height
             };
             p.Build();
+            p.SetSortOrder(sortOrder);
             return p;
         }
 
         // ── Build ──────────────────────────────────────────────────────────
         private void Build()
         {
-            var ps = UIRuntime.CreatePanelSettings();
+            _panelSettings = UIRuntime.CreatePanelSettings();
+            var ps = _panelSettings;
             _go = new GameObject($"UITK_Panel_{_title}");
             UnityEngine.Object.DontDestroyOnLoad(_go);
 
@@ -260,6 +267,19 @@ namespace CMS2026UITKFramework
         /// <summary>Scrolls to the very bottom of the content.</summary>
         public void ScrollToBottom() => ScrollTo(float.MaxValue);
 
+        /// <summary>
+        /// Zmienia kolejność renderowania panelu.
+        /// Wyższy numer = na wierzchu. Domyślnie 9999.
+        /// </summary>
+        public UIPanel SetSortOrder(int order)
+        {
+            if (_panelSettings != null)
+                UIRuntime.PanelSettingsType
+                    .GetProperty("sortingOrder")
+                    .SetValue(_panelSettings, order);
+            return this;
+        }
+
         // ══════════════════════════════════════════════════════════════════
         //  FLUENT ELEMENT API
         // ══════════════════════════════════════════════════════════════════
@@ -307,9 +327,21 @@ namespace CMS2026UITKFramework
                     .Invoke(clickable, new object[] { il2Action });
             }
 
+            Color bg = bgColor ?? new Color(0.18f, 0.28f, 0.48f, 1f);
+            Color hoverC = new Color(
+                Mathf.Min(bg.r + 0.12f, 1f),
+                Mathf.Min(bg.g + 0.12f, 1f),
+                Mathf.Min(bg.b + 0.12f, 1f), bg.a);
+            Color pressC = new Color(
+                bg.r * 0.70f,
+                bg.g * 0.70f,
+                bg.b * 0.70f, bg.a);
+            WireHoverPress(btn, bg, hoverC, pressC);
+
             UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), btn);
             var handle = new UIButtonHandle(UIRuntime.GetPtr(btn));
             _currentY += height + ElemGap;
+
             return handle;
         }
 
@@ -867,6 +899,60 @@ namespace CMS2026UITKFramework
                 .Invoke(clickable, new object[] { il2Action });
         }
 
+        private void WireHoverPress(object ve, Color normal, Color hover, Color press)
+        {
+            try
+            {
+                var ue = UIRuntime.UEAsm;
+                var trickle = ue.GetType("UnityEngine.UIElements.TrickleDown");
+                var enterType = ue.GetType("UnityEngine.UIElements.PointerEnterEvent");
+                var leaveType = ue.GetType("UnityEngine.UIElements.PointerLeaveEvent");
+                var downType = ue.GetType("UnityEngine.UIElements.PointerDownEvent");
+                var upType = ue.GetType("UnityEngine.UIElements.PointerUpEvent");
+
+                var regBase = UIRuntime.VisualElementType.GetMethods()
+                    .First(m => m.Name == "RegisterCallback"
+                             && m.IsGenericMethod
+                             && m.GetParameters().Length == 2);
+                var td = Enum.Parse(trickle, "TrickleDown");
+
+                var enterReg = regBase.MakeGenericMethod(enterType);
+                Action<UnityEngine.UIElements.PointerEnterEvent> enterH =
+                    _ => S.BgColor(UIRuntime.GetStyle(ve), hover);
+                enterReg.Invoke(ve, new object[] {
+                    Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<UnityEngine.UIElements.EventCallback<UnityEngine.UIElements.PointerEnterEvent>>(enterH), td });
+
+                var leaveReg = regBase.MakeGenericMethod(leaveType);
+                Action<UnityEngine.UIElements.PointerLeaveEvent> leaveH =
+                    _ => S.BgColor(UIRuntime.GetStyle(ve), normal);
+                leaveReg.Invoke(ve, new object[] {
+                    Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<UnityEngine.UIElements.EventCallback<UnityEngine.UIElements.PointerLeaveEvent>>(leaveH), td });
+
+                var downReg = regBase.MakeGenericMethod(downType);
+                Action<UnityEngine.UIElements.PointerDownEvent> downH =
+                    _ => S.BgColor(UIRuntime.GetStyle(ve), press);
+                downReg.Invoke(ve, new object[] {
+                    Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<UnityEngine.UIElements.EventCallback<UnityEngine.UIElements.PointerDownEvent>>(downH), td });
+
+                var upReg = regBase.MakeGenericMethod(upType);
+                Action<UnityEngine.UIElements.PointerUpEvent> upH =
+                    _ => S.BgColor(UIRuntime.GetStyle(ve), hover);
+                upReg.Invoke(ve, new object[] {
+                    Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<UnityEngine.UIElements.EventCallback<UnityEngine.UIElements.PointerUpEvent>>(upH), td });
+            }
+            catch (Exception ex) { FrameworkPlugin.Log.Warning("[HoverPress] " + ex.Message); }
+        }
+
+        /// <summary>
+        /// Podpina hover/press feedback na dowolny element przez jego ptr.
+        /// Działa na Label, Button, lub surowym VE pobranym przez GetRawPtr().
+        /// </summary>
+        public void WireHover(IntPtr ptr, Color normal, Color hover, Color press)
+        {
+            var ve = UIRuntime.WrapVE(ptr);
+            WireHoverPress(ve, normal, hover, press);
+        }
+
         // ── Public panel API ───────────────────────────────────────────────
 
         public bool IsVisible => _visible;
@@ -936,7 +1022,7 @@ namespace CMS2026UITKFramework
                 var pDownType = ue.GetType("UnityEngine.UIElements.PointerDownEvent");
                 var pMoveType = ue.GetType("UnityEngine.UIElements.PointerMoveEvent");
                 var pUpType = ue.GetType("UnityEngine.UIElements.PointerUpEvent");
-                var pLeaveType = ue.GetType("UnityEngine.UIElements.PointerLeaveEvent"); // NOWE
+                var pLeaveType = ue.GetType("UnityEngine.UIElements.PointerLeaveEvent"); 
 
                 var regBase = UIRuntime.VisualElementType.GetMethods()
                                     .First(m => m.Name == "RegisterCallback"

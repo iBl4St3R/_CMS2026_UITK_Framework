@@ -24,9 +24,10 @@ namespace CMS2026UITKFramework
         /// Returns null if UIToolkit is unavailable.
         /// </summary>
         public static UIPanel CreatePanel(string title,
-                                          float x, float y,
-                                          float width, float height)
-            => UIPanel.Create(title, x, y, width, height);
+                                         float x, float y,
+                                         float width, float height,
+                                         int sortOrder = 9999)
+           => UIPanel.Create(title, x, y, width, height, sortOrder);
 
         /// <summary>
         /// Returns the first active panel with the given title, or null if not found.

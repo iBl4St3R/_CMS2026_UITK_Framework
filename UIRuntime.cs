@@ -46,6 +46,9 @@ namespace CMS2026UITKFramework
         internal static Type StyleJustifyType;
         internal static Type TextAnchorType;
         internal static Type StyleTextAnchorType;
+        internal static Type ScaleModeType;
+        internal static Type StyleScaleModeType;
+        internal static ConstructorInfo StyleScaleModeCtor;
 
         // ── Constructors ────────────────────────────────────────────────────
         internal static ConstructorInfo StyleLengthCtor;
@@ -134,6 +137,8 @@ namespace CMS2026UITKFramework
 
             TextAnchorType = typeof(UnityEngine.TextAnchor);
             StyleTextAnchorType = MakeStyleEnum(TextAnchorType);
+            ScaleModeType = typeof(UnityEngine.ScaleMode);
+            StyleScaleModeType = MakeStyleEnum(ScaleModeType);
         }
 
         private static Type MakeStyleEnum(Type enumType)
@@ -151,6 +156,7 @@ namespace CMS2026UITKFramework
             StyleAlignCtor = StyleAlignType.GetConstructor(new[] { AlignType });
             StyleJustifyCtor = StyleJustifyType.GetConstructor(new[] { JustifyType });
             StyleTextAnchorCtor = StyleTextAnchorType.GetConstructor(new[] { TextAnchorType });
+            StyleScaleModeCtor = StyleScaleModeType.GetConstructor(new[] { ScaleModeType });
         }
 
         private static void SetupFont()
@@ -166,16 +172,16 @@ namespace CMS2026UITKFramework
 
         // ── Internal helpers used by builders ───────────────────────────────
 
-        internal static object NewVE()
+        public static object NewVE()
             => Activator.CreateInstance(VisualElementType);
 
-        internal static object WrapVE(IntPtr ptr)
-            => Activator.CreateInstance(VisualElementType, new object[] { ptr });
+        public static object WrapVE(IntPtr ptr)
+           => Activator.CreateInstance(VisualElementType, new object[] { ptr });
 
-        internal static object GetStyle(object ve)
+        public static object GetStyle(object ve)
             => VisualElementType.GetProperty("style").GetValue(ve);
 
-        internal static IntPtr GetPtr(object ve)
+        public static IntPtr GetPtr(object ve)
             => ((Il2CppSystem.Object)ve).Pointer;
 
         internal static void AddChild(object parent, object child)

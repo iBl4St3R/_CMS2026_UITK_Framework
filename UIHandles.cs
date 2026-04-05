@@ -24,12 +24,65 @@ namespace CMS2026UITKFramework
             S.Color(UIRuntime.GetStyle(lbl), color);
         }
 
+        public void SetFontSize(int px)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            var lbl = Activator.CreateInstance(UIRuntime.LabelType, new object[] { _ptr });
+            S.FontSize(UIRuntime.GetStyle(lbl), px);
+        }
+
+        public void SetSize(float w, float h)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            var lbl = Activator.CreateInstance(UIRuntime.LabelType, new object[] { _ptr });
+            var s = UIRuntime.GetStyle(lbl);
+            S.Width(s, w);
+            S.Height(s, h);
+        }
+
         public void SetVisible(bool visible)
         {
             if (_ptr == IntPtr.Zero) return;
             var lbl = Activator.CreateInstance(UIRuntime.LabelType, new object[] { _ptr });
             S.Display(UIRuntime.GetStyle(lbl), visible);
         }
+
+        public void SetBorderColor(Color color)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            var lbl = Activator.CreateInstance(UIRuntime.LabelType, new object[] { _ptr });
+            S.BorderColor(UIRuntime.GetStyle(lbl), color);
+        }
+
+        public void SetBorderRadius(float radius)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            var lbl = Activator.CreateInstance(UIRuntime.LabelType, new object[] { _ptr });
+            S.BorderRadius(UIRuntime.GetStyle(lbl), radius);
+        }
+
+        public void SetBorderWidth(float width)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            var lbl = Activator.CreateInstance(UIRuntime.LabelType, new object[] { _ptr });
+            S.BorderWidth(UIRuntime.GetStyle(lbl), width);
+        }
+
+        public void SetTint(UnityEngine.Color color)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            var ve = Activator.CreateInstance(UIRuntime.VisualElementType, new object[] { _ptr });
+            S.BgTint(UIRuntime.GetStyle(ve), color);
+        }
+
+        public void SetScaleMode(UnityEngine.ScaleMode mode)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            var ve = Activator.CreateInstance(UIRuntime.VisualElementType, new object[] { _ptr });
+            S.BgScaleMode(UIRuntime.GetStyle(ve), mode);
+        }
+
+        public IntPtr GetRawPtr() => _ptr;
     }
 
     // ── Button ────────────────────────────────────────────────────────────────
@@ -52,12 +105,60 @@ namespace CMS2026UITKFramework
             S.BgColor(UIRuntime.GetStyle(btn), color);
         }
 
+        
+
+        public void SetTextColor(Color color)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            var btn = Activator.CreateInstance(UIRuntime.ButtonType, new object[] { _ptr });
+            S.Color(UIRuntime.GetStyle(btn), color);
+        }
+
+        public void SetFontSize(int px)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            var btn = Activator.CreateInstance(UIRuntime.ButtonType, new object[] { _ptr });
+            S.FontSize(UIRuntime.GetStyle(btn), px);
+        }
+
+        public void SetSize(float w, float h)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            var btn = Activator.CreateInstance(UIRuntime.ButtonType, new object[] { _ptr });
+            var s = UIRuntime.GetStyle(btn);
+            S.Width(s, w);
+            S.Height(s, h);
+        }
+
+        public void SetBorderColor(Color color)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            var btn = Activator.CreateInstance(UIRuntime.ButtonType, new object[] { _ptr });
+            S.BorderColor(UIRuntime.GetStyle(btn), color);
+        }
+
+        public void SetBorderRadius(float radius)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            var btn = Activator.CreateInstance(UIRuntime.ButtonType, new object[] { _ptr });
+            S.BorderRadius(UIRuntime.GetStyle(btn), radius);
+        }
+
+        public void SetBorderWidth(float width)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            var btn = Activator.CreateInstance(UIRuntime.ButtonType, new object[] { _ptr });
+            S.BorderWidth(UIRuntime.GetStyle(btn), width);
+        }
+
         public void SetVisible(bool visible)
         {
             if (_ptr == IntPtr.Zero) return;
             var btn = Activator.CreateInstance(UIRuntime.ButtonType, new object[] { _ptr });
             S.Display(UIRuntime.GetStyle(btn), visible);
         }
+
+        public IntPtr GetRawPtr() => _ptr; 
     }
 
     // ── Toggle ────────────────────────────────────────────────────────────────
@@ -112,6 +213,8 @@ namespace CMS2026UITKFramework
                           new object[] { _btnPtr });
             S.Display(UIRuntime.GetStyle(btn), visible);
         }
+
+        public IntPtr GetRawPtr() => _btnPtr; 
     }
 
     // ── Slider ────────────────────────────────────────────────────────────────
@@ -190,6 +293,8 @@ namespace CMS2026UITKFramework
         private string FormatValue(float v)
             => (_step < 1f) ? v.ToString("F1") : ((int)v).ToString();
 
+        public IntPtr GetFillPtr() => _fillPtr;
+        public IntPtr GetValueLblPtr() => _valueLblPtr;
 
     }
 
@@ -232,6 +337,8 @@ namespace CMS2026UITKFramework
             var tf = Activator.CreateInstance(UIRuntime.TextFieldType, new object[] { _ptr });
             S.Display(UIRuntime.GetStyle(tf), visible);
         }
+
+        public IntPtr GetRawPtr() => _ptr;
     }
 
     // ── ColorPicker ───────────────────────────────────────────────────────────
@@ -310,6 +417,10 @@ namespace CMS2026UITKFramework
             _onChange?.Invoke(_value);
         }
 
+
+        public IntPtr GetPreviewPtr() => _previewPtr;     
+        public IntPtr GetFillPtr(int channel) => _fillPtrs[channel]; 
+        public IntPtr GetValueLblPtr(int channel) => _valuePtrs[channel];
     }
 
 
@@ -341,6 +452,23 @@ namespace CMS2026UITKFramework
             var ve = Activator.CreateInstance(UIRuntime.VisualElementType, new object[] { _ptr });
             S.Display(UIRuntime.GetStyle(ve), visible);
         }
+
+
+        public void SetTint(UnityEngine.Color color)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            var ve = Activator.CreateInstance(UIRuntime.VisualElementType, new object[] { _ptr });
+            S.BgTint(UIRuntime.GetStyle(ve), color);
+        }
+
+        public void SetScaleMode(UnityEngine.ScaleMode mode)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            var ve = Activator.CreateInstance(UIRuntime.VisualElementType, new object[] { _ptr });
+            S.BgScaleMode(UIRuntime.GetStyle(ve), mode);
+        }
+
+        public IntPtr GetRawPtr() => _ptr;  
     }
 
     // ── ProgressBar ───────────────────────────────────────────────────────────
@@ -385,6 +513,9 @@ namespace CMS2026UITKFramework
                          new object[] { _fillPtr });
             S.Display(UIRuntime.GetStyle(ve), visible);
         }
+
+        public IntPtr GetFillPtr() => _fillPtr;
+        public IntPtr GetLabelPtr() => _labelPtr;
 
         private void Refresh()
         {

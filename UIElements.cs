@@ -61,5 +61,45 @@ namespace CMS2026UITKFramework
             SetProp(s, "paddingTop", Sl(v));
             SetProp(s, "paddingBottom", Sl(v));
         }
+
+        public static void FontSize(object s, int px)
+    => SetProp(s, "fontSize", Sl(px));   // StyleLength przyjmuje int też
+
+        public static void BorderRadius(object s, float v)
+        {
+            SetProp(s, "borderTopLeftRadius", Sl(v));
+            SetProp(s, "borderTopRightRadius", Sl(v));
+            SetProp(s, "borderBottomLeftRadius", Sl(v));
+            SetProp(s, "borderBottomRightRadius", Sl(v));
+        }
+
+        public static void BorderColor(object s, Color c)
+        {
+            SetProp(s, "borderTopColor", Sc(c));
+            SetProp(s, "borderRightColor", Sc(c));
+            SetProp(s, "borderBottomColor", Sc(c));
+            SetProp(s, "borderLeftColor", Sc(c));
+        }
+
+        public static void BorderWidth(object s, float v)
+        {
+            SetProp(s, "borderTopWidth", Sf(v));
+            SetProp(s, "borderRightWidth", Sf(v));
+            SetProp(s, "borderBottomWidth", Sf(v));
+            SetProp(s, "borderLeftWidth", Sf(v));
+
+
+        }
+
+        public static void BgTint(object s, Color c)
+            => SetProp(s, "unityBackgroundImageTintColor", Sc(c));
+
+        public static void BgScaleMode(object s, UnityEngine.ScaleMode mode)
+        {
+            // Unity 6 używa backgroundSize zamiast unityBackgroundScaleMode
+            // ScaleToFit/ScaleAndCrop = "cover", StretchToFill = "contain" / auto
+            // Na razie zostawiamy jako no-op z logiem — do zbadania
+        }
+
     }
 }
