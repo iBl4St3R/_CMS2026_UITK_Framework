@@ -88,18 +88,5 @@ Detailed documentation is available for both beginners and advanced users:
 
 ---
 
-## 📂 File Structure
-_CMS2026_UITK_Framework/
-├── FrameworkPlugin.cs   — MelonMod entry point
-├── FrameworkAPI.cs      — Public API
-├── UIRuntime.cs         — IL2CPP type resolution and helpers
-├── UIElements.cs        — S{} style helper class
-├── UIPanelBuilder.cs    — UIPanel and all AddXxx methods
-├── UIHandles.cs         — Handle classes for dynamic updates
-├── UIRowBuilder.cs      — Row layout builder
-└── UIKitUpdater.cs      — MonoBehaviour frame ticker
-
----
-
 ## 📄 License
 This framework is released under the [MIT License](https://github.com/iBl4St3R/_CMS2026_UITK_Framework/blob/main/LICENSE).
