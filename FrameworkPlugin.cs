@@ -1,8 +1,9 @@
 ﻿using CMS2026UITKFramework;
 using Il2CppMono;
-using System.Collections.Generic;
 using MelonLoader;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -51,6 +52,37 @@ namespace CMS2026UITKFramework
             _runtimeHost.AddComponent<UIKitUpdater>();
 
             Log.Msg($"[UIKit] Host created (scene: {sceneName})");
+
+            TryRegisterInConsole();  // ← DODAJ
+        }
+
+        private static void TryRegisterInConsole()
+        {
+            try
+            {
+                var apiType = AppDomain.CurrentDomain.GetAssemblies()
+                    .SelectMany(a => { try { return a.GetTypes(); } catch { return Type.EmptyTypes; } })
+                    .FirstOrDefault(t => t.FullName == "CMS2026SimpleConsole.ConsoleAPI");
+
+                if (apiType == null) return;   // konsola nie jest załadowana — nic się nie dzieje
+
+                apiType.GetMethod("RegisterMod")?.Invoke(null, new object[]
+                {
+            "_CMS2026_UITK_Framework",          // assembly name
+            "_CMS2026 UITK Framework",          // display name
+            "Blaster",                          // author
+            "UI Toolkit panel framework for CMS2026 mods",  // description
+            "https://github.com/iBl4St3R/_CMS2026_UITK_Framework",  // GitHub
+            null,                               // Nexus (brak)
+            null                                // version — null = auto z MelonInfo
+                });
+
+                Log.Msg("[UIKit] Registered in SimpleConsole mod list.");
+            }
+            catch (Exception ex)
+            {
+                Log.Warning($"[UIKit] ConsoleAPI registration failed: {ex.Message}");
+            }
         }
     }
 }

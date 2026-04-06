@@ -40,6 +40,7 @@
 
   <!-- Unity -->
   <ItemGroup>
+	  <Compile Remove="Samples\**\*.cs" />
     <Reference Include="Il2Cppmscorlib">
       <HintPath>$(InteropDir)\Il2Cppmscorlib.dll</HintPath>
       <Private>false</Private>
