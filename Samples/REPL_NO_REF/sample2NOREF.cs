@@ -1,11 +1,11 @@
 // ═══════════════════════════════════════════════════════════
 //  GARAGE OS  v1.0  —  CMS2026 UITK Framework showcase
-//  Styl: ciemny amber/gold, live stats z gry, quick actions
+//  Style: dark amber/gold, live stats from game, quick actions
 // ═══════════════════════════════════════════════════════════
 
 var p = CMS2026UITKFramework.FrameworkAPI.CreatePanel("GARAGE OS", 30, 30, 300, 560, sortOrder: 9999);
 
-// ── Pro API: styl panelu — ciemne złoto ──────────────────────
+// ── Pro API: panel style — dark gold ──────────────────────
 var panelVE = CMS2026UITKFramework.UIRuntime.WrapVE(p.GetPanelRawPtr());
 var ps = CMS2026UITKFramework.UIRuntime.GetStyle(panelVE);
 CMS2026UITKFramework.S.BorderRadius(ps, 16f);
@@ -13,7 +13,7 @@ CMS2026UITKFramework.S.BorderColor(ps, new UnityEngine.Color(0.85f, 0.65f, 0.1f,
 CMS2026UITKFramework.S.BorderWidth(ps, 2f);
 CMS2026UITKFramework.S.BgColor(ps, new UnityEngine.Color(0.07f, 0.06f, 0.04f, 0.97f));
 
-// ── STATUS BAR — pulsujący dot + wersja ──────────────────────
+// ── STATUS BAR — pulsing dot + version ──────────────────────
 p.AddHeader("● SYSTEM STATUS");
 var lblStatus = p.AddLabel("ONLINE  |  Scene: " + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
 lblStatus.SetColor(new UnityEngine.Color(0.4f, 0.9f, 0.4f, 1f));
@@ -45,18 +45,18 @@ p.AddHeader("QUICK ACTIONS");
 
 p.AddButton("+ $50 000", () => {
     Il2CppCMS.Shared.SharedGameDataManager.Instance.AddMoneyRpc(50000);
-    Print("[GarageOS] +$50,000 dodane!");
+    Print("[GarageOS] +$50,000 added!");
 }, new UnityEngine.Color(0.15f, 0.28f, 0.1f, 1f));
 
 p.AddButton("+ 5 000 XP", () => {
     Il2CppCMS.Player.PlayerData.AddPlayerExp(5000, true);
-    Print("[GarageOS] +5000 XP dodane!");
+    Print("[GarageOS] +5000 XP added!");
 }, new UnityEngine.Color(0.1f, 0.2f, 0.35f, 1f));
 
 p.AddButton("MEGA CASH  ($1M)", () => {
     var sgdm = Il2CppCMS.Shared.SharedGameDataManager.Instance;
     sgdm.AddMoneyRpc(1000000 - (int)sgdm.money);
-    Print("[GarageOS] Kasa ustawiona na $1,000,000!");
+    Print("[GarageOS] Cash set to $1,000,000!");
 }, new UnityEngine.Color(0.3f, 0.22f, 0.0f, 1f));
 
 p.AddSeparator();
@@ -106,7 +106,7 @@ p.AddToggle("Remove demo walls", false, v => {
         var go = UnityEngine.GameObject.Find(name);
         if (go != null) { go.SetActive(false); n++; }
     }
-    Print("[GarageOS] Usunięto " + n + " ścian demo.");
+    Print("[GarageOS] Removed " + n + " demo walls.");
 });
 
 p.AddSeparator();
@@ -118,9 +118,9 @@ lblAuthor.SetFontSize(10);
 
 p.AddSpace(4f);
 
-p.AddButton("✕  Zamknij panel", () => {
+p.AddButton("✕  Close panel", () => {
     CMS2026UITKFramework.FrameworkAPI.GetPanel("GARAGE OS")?.SetVisible(false);
-    Print("[GarageOS] Panel ukryty. Uzyj FrameworkAPI.GetPanel(\"GARAGE OS\")?.SetVisible(true) by przywrocic.");
+    Print("[GarageOS] Panel hidden. Use FrameworkAPI.GetPanel(\"GARAGE OS\")?.SetVisible(true) to restore.");
 }, new UnityEngine.Color(0.25f, 0.05f, 0.05f, 1f));
 
 // ── SCROLLBAR ─────────────────────────────────────────────────
@@ -152,7 +152,7 @@ p.SetUpdateCallback(dt => {
     int lvl = Il2CppCMS.Player.PlayerData.PlayerLevel;
     lblLevel.SetText("LVL  " + lvl.ToString());
 
-    // Pulsujący dot w status barze
+    // Pulsing dot in status bar
     _dotT += dt * 2.5f;
     var dotVE = CMS2026UITKFramework.UIRuntime.WrapVE(lblStatus.GetRawPtr());
     CMS2026UITKFramework.S.Opacity(
@@ -161,7 +161,7 @@ p.SetUpdateCallback(dt => {
     );
 });
 
-// ── złoty border na money labelu przez Pro API ────────────────
+// ── gold border on money label via Pro API ────────────────
 var moneyVE = CMS2026UITKFramework.UIRuntime.WrapVE(lblMoney.GetRawPtr());
 var ms = CMS2026UITKFramework.UIRuntime.GetStyle(moneyVE);
 CMS2026UITKFramework.S.BorderColor(ms, new UnityEngine.Color(0.85f, 0.65f, 0.1f, 0.6f));
@@ -169,4 +169,4 @@ CMS2026UITKFramework.S.BorderWidth(ms, 1f);
 CMS2026UITKFramework.S.BorderRadius(ms, 5f);
 CMS2026UITKFramework.S.Padding(ms, 4f);
 
-Print("[GarageOS] Panel gotowy! Zloty styl, live stats, speed tuner.");
+Print("[GarageOS] Panel ready! Gold style, live stats, speed tuner.");

@@ -1,8 +1,8 @@
 var p = CMS2026UITKFramework.FrameworkAPI.CreatePanel("Framework Demo", 40, 40, 320, 600, sortOrder: 9999);
 
 p.AddHeader("Labels");
-p.AddLabel("Zwykły tekst");
-var lbl = p.AddLabel("Duży + kolor + border");
+p.AddLabel("Plain text");
+var lbl = p.AddLabel("Large + color + border");
 lbl.SetFontSize(16);
 lbl.SetColor(new UnityEngine.Color(1f, 0.8f, 0.2f, 1f));
 lbl.SetBorderColor(new UnityEngine.Color(0.3f, 0.7f, 1f, 1f));
@@ -10,9 +10,9 @@ lbl.SetBorderWidth(1f);
 lbl.SetBorderRadius(6f);
 
 p.AddHeader("Buttons");
-p.AddButton("Normalny",  () => Print("klik!"));
-p.AddButton("Zielony",   () => Print("zielony!"),  new UnityEngine.Color(0.1f, 0.35f, 0.1f, 1f));
-p.AddButton("Czerwony",  () => Print("czerwony!"), new UnityEngine.Color(0.35f, 0.1f, 0.1f, 1f));
+p.AddButton("Normal",  () => Print("click!"));
+p.AddButton("Green",   () => Print("green!"),  new UnityEngine.Color(0.1f, 0.35f, 0.1f, 1f));
+p.AddButton("Red",     () => Print("red!"),    new UnityEngine.Color(0.35f, 0.1f, 0.1f, 1f));
 
 p.AddSeparator();
 
@@ -30,10 +30,10 @@ var pbXP   = p.AddProgressBar("XP",   0.42f, new UnityEngine.Color(0.3f, 0.7f, 1
 var pbFuel = p.AddProgressBar("Fuel", 0.18f, new UnityEngine.Color(0.9f, 0.45f, 0.2f, 1f), height: 22f);
 
 p.AddHeader("Text Input");
-p.AddTextInput("Wpisz nazwę gracza...", v => Print("Submit: " + v));
+p.AddTextInput("Enter player name...", v => Print("Submit: " + v));
 
 p.AddHeader("Dropdown");
-p.AddDropdown("Tryb", new[] { "Normal", "Turbo", "Debug", "Sandbox" }, 0, i => Print("Tryb: " + i));
+p.AddDropdown("Mode", new[] { "Normal", "Turbo", "Debug", "Sandbox" }, 0, i => Print("Mode: " + i));
 
 p.AddHeader("Color Picker");
 p.AddColorPicker("Player Color", UnityEngine.Color.red, c => Print("RGB: " + c), step: 5);
@@ -43,7 +43,7 @@ p.AddSeparator();
 p.AddHeader("Live Update");
 var lblT     = p.AddLabel("t = 0.0s");
 var pbAnim   = p.AddProgressBar("sin(t)", 0.5f, new UnityEngine.Color(0.7f, 0.4f, 1f, 1f), height: 20f);
-var lblPulse = p.AddLabel("● pulsujacy label");
+var lblPulse = p.AddLabel("● pulsing label");
 lblPulse.SetColor(new UnityEngine.Color(1f, 0.8f, 0.2f, 1f));
 
 float t = 0f;
@@ -74,7 +74,7 @@ CMS2026UITKFramework.S.BorderRadius(s, 14f);
 CMS2026UITKFramework.S.BorderColor(s, new UnityEngine.Color(0.3f, 0.7f, 1f, 1f));
 CMS2026UITKFramework.S.BorderWidth(s, 2f);
 
-var p2 = CMS2026UITKFramework.FrameworkAPI.CreatePanel("Za głównym (z:100)", 80, 80, 220, 100, sortOrder: 100);
-p2.AddLabel("Jestem pod głównym panelem.");
+var p2 = CMS2026UITKFramework.FrameworkAPI.CreatePanel("Behind main (z:100)", 80, 80, 220, 100, sortOrder: 100);
+p2.AddLabel("I am beneath the main panel.");
 
-Print("=== Demo gotowe! ===");
+Print("=== Demo ready! ===");

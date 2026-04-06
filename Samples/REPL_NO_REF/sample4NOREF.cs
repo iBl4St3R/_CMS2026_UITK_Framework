@@ -55,8 +55,8 @@ p.AddImage(texWall, 0f, 520f);
 p.AddSpace(-520f);
 
 // ── Status bar ────────────────────────────────────────
-// FIX: UIRowBuilder nie ma GetRawPtr — pomijamy stylizację tła statusbara
-// (alternatywnie: stwórz własny VE przed AddRow i wstaw go przez UIRuntime.AddChild)
+// FIX: UIRowBuilder has no GetRawPtr — skipping status bar background styling
+// (alternative: create a custom VE before AddRow and inject it via UIRuntime.AddChild)
 var statusRow = p.AddRow(28f, 4f);
 var lblTime   = statusRow.AddLabel(System.DateTime.Now.ToString("HH:mm"), 80f, C_WHITE);
 lblTime.SetFontSize(13);
@@ -78,8 +78,8 @@ var apps = new (string label, UnityEngine.Texture2D tex, System.Action onClick)[
     ("Browser",  texBrowser,  () => Print("App: Browser")),
 };
 
-// FIX: UIRowBuilder nie ma AddRow ani AddImage.
-// Tworzymy każdą ikonę jako raw VE i wstrzykujemy przez AddRaw().
+// FIX: UIRowBuilder has no AddRow or AddImage.
+// We create each icon as a raw VE and inject it via AddRaw().
 Func<UnityEngine.Texture2D, System.IntPtr> makeIcon = tex => {
     var ve = CMS2026UITKFramework.UIRuntime.NewVE();
     var s  = CMS2026UITKFramework.UIRuntime.GetStyle(ve);
@@ -87,7 +87,7 @@ Func<UnityEngine.Texture2D, System.IntPtr> makeIcon = tex => {
     CMS2026UITKFramework.S.Height(s,       ICO);
     CMS2026UITKFramework.S.BorderRadius(s, 14f);
     if (tex != null) {
-        // SetBackgroundImage to metoda wewnętrzna UIRuntime używana przez AddImage
+        // SetBackgroundImage is an internal UIRuntime method used by AddImage
         CMS2026UITKFramework.UIRuntime.SetBackgroundImage(ve, tex);
     } else {
         CMS2026UITKFramework.S.BgColor(s, new UnityEngine.Color(0.2f, 0.3f, 0.5f, 1f));
@@ -109,7 +109,7 @@ for (int i = 0; i < 4; i++) {
         CMS2026UITKFramework.S.BgColor(icoSt, new UnityEngine.Color(0.2f, 0.3f, 0.5f, 1f));
 
     var icoPtr = CMS2026UITKFramework.UIRuntime.GetPtr(icoVE);
-    appRow1.AddRaw(icoVE, ICO + IGAP);  // AddRaw przesuwa kursor o ICO+IGAP
+    appRow1.AddRaw(icoVE, ICO + IGAP);  // AddRaw advances cursor by ICO+IGAP
     p.WireHover(icoPtr, C_TRANS,
         new UnityEngine.Color(1f,1f,1f,0.15f),
         new UnityEngine.Color(1f,1f,1f,0.30f));
@@ -140,7 +140,7 @@ for (int i = 4; i < 8; i++) {
 p.AddSpace(16f);
 
 // ── Dock ──────────────────────────────────────────────
-// FIX: AddSeparator zwraca void — nie przypisujemy do var
+// FIX: AddSeparator returns void — not assigning to var
 p.AddSeparator(new UnityEngine.Color(0.3f,0.3f,0.35f,0.5f));
 p.AddSpace(6f);
 
@@ -151,7 +151,7 @@ var dockApps = new (UnityEngine.Texture2D tex, string label)[] {
     (texSettings, "Set"),
 };
 
-// FIX: UIRowBuilder nie ma AddImage — używamy AddRaw
+// FIX: UIRowBuilder has no AddImage — using AddRaw instead
 var dockRow = p.AddRow(ICO, 6f);
 foreach (var da in dockApps) {
     var dve  = CMS2026UITKFramework.UIRuntime.NewVE();
