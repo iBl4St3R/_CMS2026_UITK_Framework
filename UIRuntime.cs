@@ -219,7 +219,7 @@ namespace CMS2026UITKFramework
         }
 
 
-        internal static void SetBackgroundImage(object ve, Texture2D tex)
+        public static void SetBackgroundImage(object ve, Texture2D tex)
         {
             if (tex == null) return;
             try

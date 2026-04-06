@@ -158,6 +158,10 @@ namespace CMS2026UITKFramework
         /// </summary>
         public void AddRaw(object ve, float consumedWidth)
         {
+            var s = UIRuntime.GetStyle(ve);
+            S.Position(s, "Absolute");
+            S.Left(s, _currentX);
+            S.Top(s, 0f);
             UIRuntime.AddChild(UIRuntime.WrapVE(_containerPtr), ve);
             _currentX += consumedWidth;
         }
