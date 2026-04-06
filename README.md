@@ -1,7 +1,9 @@
 # _CMS2026_UITK_Framework
 
 # ⚠️ IMPORTANT FOR PLAYERS / WAŻNE DLA GRACZY
-**THIS IS NOT A STANDALONE GAME MOD.** It is a developer tool and a library required by other mods to display their user interfaces. Only install this if another mod requires it or if you are a mod developer.
+<font color="red">**THIS IS NOT A STANDALONE GAME MOD.**</font> It is a developer tool and a library required by other mods to display their user interfaces. Only install this if another mod requires it or if you are a mod developer.
+
+**TO NIE JEST SAMODZIELNA MODYFIKACJA DO GRY.** Jest to narzędzie programistyczne i biblioteka wymagana przez inne mody do wyświetlania ich interfejsów. Instaluj tylko wtedy, gdy inny mod tego wymaga lub jeśli sam tworzysz mody.
 
 ---
 
@@ -17,14 +19,14 @@ Interfaces with Unity 6's UI Toolkit via MelonLoader and IL2CPP, giving mod deve
 
 ---
 
-## 🛠 Installation
-1. Copy `_CMS2026_UITK_Framework.dll` into your `Mods/` folder.
-2. The framework loads automatically with `MelonPriority(-100)` — ensuring it initializes before other mods.
+## 📂 Samples & Examples
+If you want to see the framework in action or learn how to implement specific features, check the **[Samples folder](https://github.com/iBl4St3R/_CMS2026_UITK_Framework/tree/main/Samples)** in the repository. It contains ready-to-use code snippets for various UI layouts.
 
 ---
 
-## 📂 Samples & Examples
-If you want to see the framework in action or learn how to implement specific features, check the **[Samples folder](https://github.com/iBl4St3R/_CMS2026_UITK_Framework/tree/main/Samples)** in the repository. It contains ready-to-use code snippets for various UI layouts.
+## 🛠 Installation
+1. Copy `_CMS2026_UITK_Framework.dll` into your `Mods/` folder.
+2. The framework loads automatically with `MelonPriority(-100)` — ensuring it initializes before other mods.
 
 ---
 
@@ -49,3 +51,51 @@ public class MyMod : MelonMod
         panel.SetDragWhenScrollable(true);
     }
 }
+```
+
+## ✨ Features
+
+| Element | Description |
+|---|---|
+| `AddLabel` | Static or dynamic text |
+| `AddHeader` | Section title with separator |
+| `AddButton` | Clickable button with auto hover/press |
+| `AddToggle` | ON/OFF switch with callback |
+| `AddSlider` | Value slider with +/- buttons and drag |
+| `AddProgressBar` | Horizontal bar 0–1 |
+| `AddTextInput` | Single-line text field |
+| `AddColorPicker` | RGB picker with channel sliders |
+| `AddDropdown` | Expandable option list |
+| `AddImage` | Texture display with tint support |
+| `AddSeparator` | Horizontal divider for visual grouping |
+| `AddSpace` | Empty vertical gap for layout spacing |
+| `AddRow` | Horizontal row container for multi-column layouts |
+
+Panel capabilities:
+* Draggable title bar and mouse wheel scrolling.
+* Sort order control for z-layering between multiple panels.
+* Per-frame update callbacks for animations and live data tracking.
+* Advanced styling (rounded corners, borders, opacity) via Pro API.
+
+## 📚 Documentation
+Detailed documentation is available for both beginners and advanced users:
+* 📖 Basic API Documentation – Recommended for most modders. Covers elements, callbacks, and basic panel setup.
+* 🛡️ Pro API Documentation – For advanced usage, including raw pointers, S{} styles, and custom Visual Elements.
+
+## ⚠️ Known Limitations
+* Framework UI renders below the game's native Canvas during scene loading screens due to Unity architecture.
+* `SetScaleMode` on images is currently pending due to Unity 6 API changes.
+* `SetSize` on Labels/Buttons uses absolute positioning and does not trigger element reflow.
+
+## 📂 File Structure
+_CMS2026_UITK_Framework/
+├── FrameworkPlugin.cs   — MelonMod entry point
+├── FrameworkAPI.cs      — Public API
+├── UIRuntime.cs         — IL2CPP type resolution and helpers
+├── UIElements.cs        — S{} style helper class
+├── UIPanelBuilder.cs    — UIPanel and all AddXxx methods
+├── UIHandles.cs         — Handle classes for dynamic updates
+└── UIKitUpdater.cs      — MonoBehaviour frame ticker
+
+## 📄 License
+This framework is released under the MIT License.
