@@ -1,6 +1,6 @@
 # _CMS2026_UITK_Framework
 
-# ⚠️ IMPORTANT FOR PLAYERS / WAŻNE DLA GRACZY
+# ⚠️ IMPORTANT FOR PLAYERS
 **THIS IS NOT A STANDALONE GAME MOD.** It is a developer tool and a library required by other mods to display their user interfaces. Only install this if another mod requires it or if you are a mod developer.
 
 ---
