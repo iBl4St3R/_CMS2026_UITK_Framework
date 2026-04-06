@@ -3,8 +3,6 @@
 # ⚠️ IMPORTANT FOR PLAYERS
 <font color="red">**THIS IS NOT A STANDALONE GAME MOD.**</font> It is a developer tool and a library required by other mods to display their user interfaces. Only install this if another mod requires it or if you are a mod developer.
 
-**TO NIE JEST SAMODZIELNA MODYFIKACJA DO GRY.** Jest to narzędzie programistyczne i biblioteka wymagana przez inne mody do wyświetlania ich interfejsów. Instaluj tylko wtedy, gdy inny mod tego wymaga lub jeśli sam tworzysz mody.
-
 ---
 
 # _CMS2026_UITK_Framework
