@@ -1,6 +1,6 @@
 # _CMS2026_UITK_Framework
 
-# ⚠️ IMPORTANT FOR PLAYERS / WAŻNE DLA GRACZY
+# ⚠️ IMPORTANT FOR PLAYERS
 <font color="red">**THIS IS NOT A STANDALONE GAME MOD.**</font> It is a developer tool and a library required by other mods to display their user interfaces. Only install this if another mod requires it or if you are a mod developer.
 
 **TO NIE JEST SAMODZIELNA MODYFIKACJA DO GRY.** Jest to narzędzie programistyczne i biblioteka wymagana przez inne mody do wyświetlania ich interfejsów. Instaluj tylko wtedy, gdy inny mod tego wymaga lub jeśli sam tworzysz mody.
@@ -100,6 +100,4 @@ _CMS2026_UITK_Framework/
 ## 📄 License
 <<<<<<< HEAD
 This framework is released under the MIT License.
-=======
-This framework is released under the MIT License.
->>>>>>> a49b384df2f33e3642cb5c9e00531a5dd46d77a0
+
