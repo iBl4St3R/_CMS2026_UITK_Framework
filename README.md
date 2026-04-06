@@ -98,4 +98,8 @@ _CMS2026_UITK_Framework/
 └── UIKitUpdater.cs      — MonoBehaviour frame ticker
 
 ## 📄 License
+<<<<<<< HEAD
 This framework is released under the MIT License.
+=======
+This framework is released under the MIT License.
+>>>>>>> a49b384df2f33e3642cb5c9e00531a5dd46d77a0
