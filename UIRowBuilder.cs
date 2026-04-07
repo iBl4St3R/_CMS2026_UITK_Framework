@@ -15,12 +15,140 @@ namespace CMS2026UITKFramework
         private readonly float _height;
         private float _currentX = 0f;
 
-        internal UIRowBuilder(IntPtr containerPtr, float totalWidth, float height)
+        private readonly UIPanel _panel;
+        private readonly float _rowTopInPanel;
+        private const float Pad = 6f;   // musi zgadzać się z UIPanel.Pad
+
+        internal UIRowBuilder(IntPtr containerPtr, float totalWidth, float height,UIPanel panel = null, float rowTopInPanel = 0f)
         {
             _containerPtr = containerPtr;
             _totalWidth = totalWidth;
             _height = height;
+            _panel = panel;
+            _rowTopInPanel = rowTopInPanel;
         }
+
+        // ── AddDropdown ────────────────────────────────────────────────────
+        /// <summary>
+        /// Inline dropdown w wierszu.
+        /// Lista otwiera się nad/pod wierszem i nie jest przycinana przez viewport.
+        /// Wymaga, aby UIRowBuilder był tworzony przez panel.AddRow() (nie ręcznie).
+        /// </summary>
+        public UIDropdownHandle AddDropdown(string label,string[] options,int selectedIndex = 0,Action<int> onChanged = null,float width = 100f,int maxVisible = 5)
+        {
+            options ??= Array.Empty<string>();
+            int sel = Mathf.Clamp(selectedIndex, 0,
+                                  Mathf.Max(0, options.Length - 1));
+
+            //const float BtnH = 24f;
+            const float OptionH = 24f;
+
+            // ── Header button w wierszu ────────────────────────────────────
+            var headerBtn = Activator.CreateInstance(UIRuntime.ButtonType);
+            var hbs = UIRuntime.GetStyle(headerBtn);
+            S.Position(hbs, "Absolute");
+            S.Left(hbs, _currentX); S.Top(hbs, 0f);
+            S.Width(hbs, width); S.Height(hbs, _height);
+            S.BgColor(hbs, new Color(0.12f, 0.18f, 0.28f, 1f));
+            S.Color(hbs, Color.white);
+            S.Font(hbs);
+            S.TextAlign(hbs, TextAnchor.MiddleLeft);
+            S.Padding(hbs, 4f);
+            UIRuntime.ButtonType.GetProperty("text")
+                .SetValue(headerBtn, $"{(options.Length > 0 ? options[sel] : "—")}  ▼");
+            UIRuntime.AddChild(UIRuntime.WrapVE(_containerPtr), headerBtn);
+
+            // ── Lista — doklejona do roota panelu, poza viewportem ─────────
+            float listH = Mathf.Min(options.Length, maxVisible) * OptionH;
+            float listTopInPanel = _rowTopInPanel + _height;   // tuż pod wierszem
+            float listLeftInPanel = Pad + _currentX;            // wyrównanie do przycisku
+
+            var listContainer = UIRuntime.NewVE();
+            var lcs = UIRuntime.GetStyle(listContainer);
+            S.Position(lcs, "Absolute");
+            S.Left(lcs, listLeftInPanel);
+            S.Top(lcs, listTopInPanel);
+            S.Width(lcs, width);
+            S.Height(lcs, listH);
+            S.BgColor(lcs, new Color(0.10f, 0.14f, 0.22f, 0.98f));
+            S.Overflow(lcs, "Hidden");
+            S.Display(lcs, false);
+
+            // Fallback gdy builder tworzony poza panelem (nie powinno się zdarzyć)
+            if (_panel == null)
+            {
+                UIRuntime.AddChild(UIRuntime.WrapVE(_containerPtr), listContainer);
+            }
+            else
+            {
+                _panel.AddOverlayToPanel(listContainer);
+            }
+
+            var handle = new UIDropdownHandle(UIRuntime.GetPtr(headerBtn),UIRuntime.GetPtr(listContainer),options, sel, onChanged,listTopInPanel,
+                _panel != null ? () => _panel.GetScrollY() : (Func<float>)(() => 0f));
+
+            WireClick(headerBtn, () => handle.Toggle());
+
+            // ── Opcje z hover ──────────────────────────────────────────────
+            var ue = UIRuntime.UEAsm;
+            var trickle = ue.GetType("UnityEngine.UIElements.TrickleDown");
+            var enterT = ue.GetType("UnityEngine.UIElements.PointerEnterEvent");
+            var leaveT = ue.GetType("UnityEngine.UIElements.PointerLeaveEvent");
+            var regBase = UIRuntime.VisualElementType.GetMethods()
+                              .First(m => m.Name == "RegisterCallback"
+                                       && m.IsGenericMethod
+                                       && m.GetParameters().Length == 2);
+            var td = Enum.Parse(trickle, "TrickleDown");
+
+            for (int i = 0; i < options.Length; i++)
+            {
+                int idx = i;
+                var optBtn = Activator.CreateInstance(UIRuntime.ButtonType);
+                var obs = UIRuntime.GetStyle(optBtn);
+                S.Position(obs, "Absolute");
+                S.Left(obs, 0f); S.Top(obs, i * OptionH);
+                S.Width(obs, width); S.Height(obs, OptionH);
+                S.BgColor(obs, i == sel
+                    ? new Color(0.20f, 0.35f, 0.55f, 1f)
+                    : new Color(0.10f, 0.14f, 0.22f, 1f));
+                S.Color(obs, Color.white);
+                S.Font(obs);
+                S.TextAlign(obs, TextAnchor.MiddleLeft);
+                S.Padding(obs, 4f);
+                UIRuntime.ButtonType.GetProperty("text").SetValue(optBtn, options[i]);
+                WireClick(optBtn, () => handle.Select(idx));
+
+                try
+                {
+                    var er = regBase.MakeGenericMethod(enterT);
+                    Action<UnityEngine.UIElements.PointerEnterEvent> eh =
+                        _ => handle.OnHoverEnter(idx);
+                    er.Invoke(optBtn, new object[] {
+                    Il2CppInterop.Runtime.DelegateSupport
+                        .ConvertDelegate<UnityEngine.UIElements.EventCallback<UnityEngine.UIElements.PointerEnterEvent>>(eh), td });
+
+                    var lr = regBase.MakeGenericMethod(leaveT);
+                    Action<UnityEngine.UIElements.PointerLeaveEvent> lh =
+                        _ => handle.OnHoverLeave(idx);
+                    lr.Invoke(optBtn, new object[] {
+                    Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<UnityEngine.UIElements.EventCallback<UnityEngine.UIElements.PointerLeaveEvent>>(lh), td });
+                }
+                catch { }
+
+                UIRuntime.AddChild(listContainer, optBtn);
+                handle.AddOptionPtr(UIRuntime.GetPtr(optBtn));
+            }
+
+            _panel?.RegisterDropdownHandle(handle);
+            _currentX += width;
+            return handle;
+        }
+
+
+
+
+
+
 
         // ── Remaining space ───────────────────────────────────────────────
         public float RemainingWidth => _totalWidth - _currentX;

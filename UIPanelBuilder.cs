@@ -91,6 +91,18 @@ namespace CMS2026UITKFramework
             return p;
         }
 
+        // ── Internal accessors for UIRowBuilder dropdowns ──────────────────
+        internal void AddOverlayToPanel(object ve)
+            => UIRuntime.AddChild(UIRuntime.WrapVE(_panelPtr), ve);
+
+        internal float GetScrollY() => _scrollY;
+
+        internal void RegisterDropdownHandle(UIDropdownHandle dd)
+            => _dropdownHandles.Add(dd);
+
+
+
+
         // ── Build ──────────────────────────────────────────────────────────
         public UIPanel Build(int sortOrder = 9999)//odteraz jest publiczne -> chodzi o pozniejsze dobudowywanie przyciskow do belki
         {
@@ -263,8 +275,13 @@ namespace CMS2026UITKFramework
             S.Width(s, ContentW); S.Height(s, height);
             UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), container);
 
+            float rowTopInPanel = TitleH + Pad + _currentY;
             _currentY += height + gap;
-            return new UIRowBuilder(UIRuntime.GetPtr(container), ContentW, height);
+
+            return new UIRowBuilder(                         // <-- rozszerzona sygnatura
+                UIRuntime.GetPtr(container),
+                ContentW, height,
+                this, rowTopInPanel);
         }
 
 
