@@ -50,6 +50,7 @@ namespace CMS2026UITKFramework
         private ScrollMode _scrollMode = ScrollMode.Auto;
         private bool _showScrollbar = false;
         private bool _dragWhenScrollable = false;
+        private bool _draggable = true;
         private IntPtr _scrollTrackPtr;
         private IntPtr _scrollThumbPtr;
 
@@ -317,6 +318,18 @@ namespace CMS2026UITKFramework
             return this;
         }
 
+        /// <summary>
+        /// Enables or disables title-bar dragging entirely.
+        /// Default: true. SetDraggable(false) overrides SetDragWhenScrollable.
+        /// </summary>
+        public UIPanel SetDraggable(bool draggable)
+        {
+            _draggable = draggable;
+            return this;
+        }
+
+
+
         /// <summary>Scrolls content to an absolute Y position (clamped to valid range).</summary>
         public void ScrollTo(float y)
         {
@@ -359,6 +372,73 @@ namespace CMS2026UITKFramework
             _titleButtons.Add((label, onClick, bgColor ?? new Color(0.25f, 0.25f, 0.35f, 1f)));
             return this;
         }
+
+        public void SetSize(float width, float height)
+        {
+            _width = width;
+            _height = height;
+
+            // 1. KLUCZ: Aktualizacja PanelSettings (to steruje rozmiarem "okna" na ekranie)
+            if (_panelSettings != null)
+            {
+                try
+                {
+                    var psType = _panelSettings.GetType();
+                    // Musimy ustawić referenceResolution, aby fizyczny obszar renderowania UI się zmienił
+                    var resProp = psType.GetProperty("referenceResolution");
+                    if (resProp != null)
+                    {
+                        // UIToolkit wymaga Vector2Int dla rozdzielczości
+                        resProp.SetValue(_panelSettings, new Vector2Int((int)_width, (int)_height));
+                    }
+
+                    // Opcjonalnie: upewnij się, że scaleMode to ConstantPixelSize, 
+                    // żeby 500px zawsze było 500px
+                    var scaleModeProp = psType.GetProperty("scaleMode");
+                    if (scaleModeProp != null)
+                    {
+                        // Pobieramy typ enum PanelScaleMode z assembly UIElements
+                        var psmType = UIRuntime.UEAsm.GetType("UnityEngine.UIElements.PanelScaleMode");
+                        if (psmType != null)
+                        {
+                            scaleModeProp.SetValue(_panelSettings, Enum.Parse(psmType, "ConstantPixelSize"));
+                        }
+                    }
+                }
+                catch (Exception ex) { FrameworkPlugin.Log.Error($"[SetSize] PS Error: {ex.Message}"); }
+            }
+
+            // 2. Aktualizacja kontenerów VisualElement (tak jak w Twojej konsoli)
+            if (_rootPtr != IntPtr.Zero)
+            {
+                var rootVE = UIRuntime.WrapVE(_rootPtr);
+                var style = UIRuntime.GetStyle(rootVE);
+
+                // Ustawiamy wymiary na sztywno
+                S.Width(style, _width);
+                S.Height(style, _height);
+
+                // 3. Aktualizacja Viewportu (żeby scrollbar i ucinanie treści pasowało do nowej wielkości)
+                if (_viewportPtr != IntPtr.Zero)
+                {
+                    var viewVE = UIRuntime.WrapVE(_viewportPtr);
+                    var vStyle = UIRuntime.GetStyle(viewVE);
+                    S.Width(vStyle, _width);
+                    S.Height(vStyle, _height - TitleH); // TitleH to Twój pasek tytułowy (24f)
+                }
+
+                // 4. Content - jeśli masz rzędy (AddRow), one korzystają z _width panelu przy tworzeniu,
+                // ale stare rzędy nie zmienią szerokości same z siebie (mają Absolute).
+                // Możemy jednak wymusić szerokość kontenera treści:
+                if (_contentPtr != IntPtr.Zero)
+                {
+                    var contentVE = UIRuntime.WrapVE(_contentPtr);
+                    var cStyle = UIRuntime.GetStyle(contentVE);
+                    S.Width(cStyle, _width);
+                }
+            }
+        }
+
 
         // ══════════════════════════════════════════════════════════════════
         //  FLUENT ELEMENT API
@@ -1221,6 +1301,8 @@ namespace CMS2026UITKFramework
 
         private void HandleDrag()
         {
+            if (!_draggable) return; //api turnoff
+
             // Default: suppress drag when panel is scrollable (prevents
             // accidental moves during scroll). Modder can override with
             // SetDragWhenScrollable(true).

@@ -83,7 +83,7 @@ namespace CMS2026UITKFramework
 
                 if (UEAsm == null || TRAsm == null)
                 {
-                    FrameworkPlugin.Log.Msg("[UIRuntime] Missing assemblies — UIToolkit unavailable");
+                    FrameworkLog.Msg("[UIRuntime] Missing assemblies — UIToolkit unavailable");
                     return false;
                 }
 
