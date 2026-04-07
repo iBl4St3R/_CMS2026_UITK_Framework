@@ -84,13 +84,14 @@ namespace CMS2026UITKFramework
                 _width = width,
                 _height = height
             };
-            p.Build();
+
+            //p.Build(); przenosimy to zewnetrznego publika ponizej
             p.SetSortOrder(sortOrder);
             return p;
         }
 
         // ── Build ──────────────────────────────────────────────────────────
-        private void Build()
+        public UIPanel Build(int sortOrder = 9999)//odteraz jest publiczne -> chodzi o pozniejsze dobudowywanie przyciskow do belki
         {
             _panelSettings = UIRuntime.CreatePanelSettings();
             var ps = _panelSettings;
@@ -109,6 +110,10 @@ namespace CMS2026UITKFramework
 
             BuildPanel(root);
             FrameworkPlugin.ActivePanels.Add(this);
+
+            SetSortOrder(sortOrder); // Ustawiamy to po zbudowaniu!
+
+            return this;
         }
 
         private void BuildPanel(object root)
@@ -131,17 +136,57 @@ namespace CMS2026UITKFramework
 
         private void BuildTitleBar(object panel)
         {
+            var bar = UIRuntime.NewVE();
+            var bs = UIRuntime.GetStyle(bar);
+            S.Position(bs, "Absolute");
+            S.Left(bs, 0f); S.Top(bs, 0f);
+            S.Width(bs, _width); S.Height(bs, TitleH);
+            S.BgColor(bs, new Color(0.13f, 0.13f, 0.20f, 1f));
+            S.Overflow(bs, "Hidden");
+            UIRuntime.AddChild(panel, bar);
+
+            // Title label
             var lbl = Activator.CreateInstance(UIRuntime.LabelType);
-            var s = UIRuntime.GetStyle(lbl);
-            S.Position(s, "Absolute");
-            S.Left(s, 0f); S.Top(s, 0f);
-            S.Width(s, _width); S.Height(s, TitleH);
-            S.BgColor(s, new Color(0.13f, 0.13f, 0.20f, 1f));
-            S.Color(s, Color.white);
-            S.Font(s);
-            S.TextAlign(s, TextAnchor.MiddleLeft);
-            UIRuntime.LabelType.GetProperty("text").SetValue(lbl, $"  {_title}");
-            UIRuntime.AddChild(panel, lbl);
+            var ls = UIRuntime.GetStyle(lbl);
+            S.Position(ls, "Absolute");
+            S.Left(ls, 6f); S.Top(ls, 0f);
+            S.Width(ls, _width - 6f); S.Height(ls, TitleH);
+            S.Color(ls, Color.white);
+            S.Font(ls);
+            S.TextAlign(ls, TextAnchor.MiddleLeft);
+            UIRuntime.LabelType.GetProperty("text").SetValue(lbl, _title);
+            UIRuntime.AddChild(bar, lbl);
+
+            // Control buttons — right to left
+            float xRight = _width;
+            const float BtnW = 28f;
+
+            foreach (var (label, onClick, bg) in
+                     System.Linq.Enumerable.Reverse(_titleButtons))
+            {
+                xRight -= BtnW;
+                var btn = Activator.CreateInstance(UIRuntime.ButtonType);
+                var s = UIRuntime.GetStyle(btn);
+                S.Position(s, "Absolute");
+                S.Left(s, xRight); S.Top(s, 0f);
+                S.Width(s, BtnW); S.Height(s, TitleH);
+                S.BgColor(s, bg);
+                S.Color(s, Color.white);
+                S.Font(s);
+                S.TextAlign(s, TextAnchor.MiddleCenter);
+                S.Padding(s, 0f);
+                UIRuntime.ButtonType.GetProperty("text").SetValue(btn, label);
+                WireClick(btn, onClick);
+
+                Color hover = new Color(
+                    Mathf.Min(bg.r + 0.15f, 1f),
+                    Mathf.Min(bg.g + 0.15f, 1f),
+                    Mathf.Min(bg.b + 0.15f, 1f), bg.a);
+                WireHoverPress(btn, bg, hover,
+                    new Color(bg.r * 0.7f, bg.g * 0.7f, bg.b * 0.7f, bg.a));
+
+                UIRuntime.AddChild(bar, btn);
+            }
         }
 
         private void BuildContentArea(object panel)
@@ -297,6 +342,21 @@ namespace CMS2026UITKFramework
                 UIRuntime.PanelSettingsType
                     .GetProperty("sortingOrder")
                     .SetValue(_panelSettings, order);
+            return this;
+        }
+
+        // ── Title bar control buttons ──────────────────────────────────────
+        private readonly List<(string label, Action onClick, Color bg)> _titleButtons = new();
+
+        /// <summary>
+        /// Adds a button to the RIGHT side of the title bar.
+        /// Call before Build() — or rebuild title bar after.
+        /// Buttons are added right-to-left (last added = rightmost).
+        /// </summary>
+        public UIPanel AddTitleButton(string label, Action onClick,
+                                       Color? bgColor = null, float width = 28f)
+        {
+            _titleButtons.Add((label, onClick, bgColor ?? new Color(0.25f, 0.25f, 0.35f, 1f)));
             return this;
         }
 
