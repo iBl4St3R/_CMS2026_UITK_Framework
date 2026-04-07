@@ -92,8 +92,8 @@ namespace CMS2026UITKFramework
         }
 
         // ── Internal accessors for UIRowBuilder dropdowns ──────────────────
-        internal void AddOverlayToPanel(object ve)
-            => UIRuntime.AddChild(UIRuntime.WrapVE(_panelPtr), ve);
+        //internal void AddOverlayToPanel(object ve)
+        //    => UIRuntime.AddChild(UIRuntime.WrapVE(_panelPtr), ve); //duplikat 
 
         internal float GetScrollY() => _scrollY;
 
@@ -1129,6 +1129,74 @@ namespace CMS2026UITKFramework
             var ve = UIRuntime.WrapVE(ptr);
             WireHoverPress(ve, normal, hover, press);
         }
+
+
+        // ── NEW: overlay helpers ──────────────────────────────────────────────
+
+        /// <summary>Adds a VE directly to panel root — not clipped by viewport.</summary>
+        public void AddOverlayToPanel(object ve)
+            => UIRuntime.AddChild(UIRuntime.WrapVE(_panelPtr), ve);
+
+        /// <summary>Wires PointerUp click on any raw VE (labels, images, custom VEs).</summary>
+        public void WireClick(IntPtr ptr, Action onClick)
+        {
+            try
+            {
+                var ve = UIRuntime.WrapVE(ptr);
+                var ue = UIRuntime.UEAsm;
+                var trickle = ue.GetType("UnityEngine.UIElements.TrickleDown");
+                var pUpType = ue.GetType("UnityEngine.UIElements.PointerUpEvent");
+                var regBase = UIRuntime.VisualElementType.GetMethods()
+                                 .First(m => m.Name == "RegisterCallback"
+                                          && m.IsGenericMethod
+                                          && m.GetParameters().Length == 2);
+                Action<UnityEngine.UIElements.PointerUpEvent> upH = _ => onClick?.Invoke();
+                regBase.MakeGenericMethod(pUpType).Invoke(ve, new object[] {
+                    Il2CppInterop.Runtime.DelegateSupport
+                        .ConvertDelegate<UnityEngine.UIElements.EventCallback<UnityEngine.UIElements.PointerUpEvent>>(upH),
+                    Enum.Parse(trickle, "TrickleDown") });
+            }
+            catch (Exception ex) { FrameworkPlugin.Log.Warning("[WireClick] " + ex.Message); }
+        }
+
+        /// <summary>Creates a Button in an arbitrary container VE. Returns raw pointer.</summary>
+        public IntPtr AddButtonToContainer(object container, string text,
+            float x, float y, float w, float h, Color bg, Action onClick)
+        {
+            var btn = Activator.CreateInstance(UIRuntime.ButtonType);
+            var s = UIRuntime.GetStyle(btn);
+            S.Position(s, "Absolute");
+            S.Left(s, x); S.Top(s, y);
+            S.Width(s, w); S.Height(s, h);
+            S.BgColor(s, bg); S.Color(s, Color.white);
+            S.Font(s); S.TextAlign(s, TextAnchor.MiddleCenter); S.Padding(s, 0f);
+            UIRuntime.ButtonType.GetProperty("text").SetValue(btn, text);
+            if (onClick != null)
+            {
+                var cl = UIRuntime.ButtonType.GetProperty("clickable").GetValue(btn);
+                var il2a = Il2CppInterop.Runtime.DelegateSupport
+                                .ConvertDelegate<Il2CppSystem.Action>(onClick);
+                UIRuntime.ClickableType.GetMethod("add_clicked").Invoke(cl, new object[] { il2a });
+            }
+            UIRuntime.AddChild(container, btn);
+            return UIRuntime.GetPtr(btn);
+        }
+
+        /// <summary>Creates a Label in an arbitrary container VE. Returns UILabelHandle.</summary>
+        public UILabelHandle AddLabelToContainer(object container, string text,
+            float x, float y, float w, float h, Color color)
+        {
+            var lbl = Activator.CreateInstance(UIRuntime.LabelType);
+            var s = UIRuntime.GetStyle(lbl);
+            S.Position(s, "Absolute");
+            S.Left(s, x); S.Top(s, y);
+            S.Width(s, w); S.Height(s, h);
+            S.Color(s, color); S.Font(s);
+            UIRuntime.LabelType.GetProperty("text").SetValue(lbl, text);
+            UIRuntime.AddChild(container, lbl);
+            return new UILabelHandle(UIRuntime.GetPtr(lbl));
+        }
+
 
         // ── Public panel API ───────────────────────────────────────────────
 

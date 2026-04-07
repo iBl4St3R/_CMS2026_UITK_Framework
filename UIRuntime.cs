@@ -184,7 +184,7 @@ namespace CMS2026UITKFramework
         public static IntPtr GetPtr(object ve)
             => ((Il2CppSystem.Object)ve).Pointer;
 
-        internal static void AddChild(object parent, object child)
+        public static void AddChild(object parent, object child)
             => VisualElementType
                 .GetMethod("Add", new[] { VisualElementType })
                 .Invoke(parent, new object[] { child });

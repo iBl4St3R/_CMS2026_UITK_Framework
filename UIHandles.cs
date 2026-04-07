@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CMS2026UITKFramework
 {
@@ -330,6 +331,60 @@ namespace CMS2026UITKFramework
             }
             catch { }
         }
+
+        /// <summary>
+        /// Simulates placeholder: gray hint when empty/unfocused,
+        /// clears on focus, restores on blur if empty.
+        /// </summary>
+        public void SetFakePlaceholder(string placeholder, Color phColor, Color activeColor)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            var tf = Activator.CreateInstance(UIRuntime.TextFieldType, new object[] { _ptr });
+            UIRuntime.TextFieldType.GetProperty("value").SetValue(tf, placeholder);
+            S.Color(UIRuntime.GetStyle(tf), phColor);
+            try
+            {
+                var ue = UIRuntime.UEAsm;
+                var trickle = ue.GetType("UnityEngine.UIElements.TrickleDown");
+                var td = Enum.Parse(trickle, "TrickleDown");
+                var focusT = ue.GetType("UnityEngine.UIElements.FocusEvent");
+                var blurT = ue.GetType("UnityEngine.UIElements.BlurEvent");
+                var regBase = UIRuntime.VisualElementType.GetMethods()
+                                 .First(m => m.Name == "RegisterCallback"
+                                          && m.IsGenericMethod
+                                          && m.GetParameters().Length == 2);
+
+                // Focus → clear placeholder
+                var focusReg = regBase.MakeGenericMethod(focusT);
+                Action<UnityEngine.UIElements.FocusEvent> focusH = _ =>
+                {
+                    var t2 = Activator.CreateInstance(UIRuntime.TextFieldType, new object[] { _ptr });
+                    if (((string)UIRuntime.TextFieldType.GetProperty("value").GetValue(t2) ?? "") == placeholder)
+                    {
+                        UIRuntime.TextFieldType.GetProperty("value").SetValue(t2, "");
+                        S.Color(UIRuntime.GetStyle(t2), activeColor);
+                    }
+                };
+                focusReg.Invoke(tf, new object[] {
+                    Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<UnityEngine.UIElements.EventCallback<UnityEngine.UIElements.FocusEvent>>(focusH), td });
+
+                // Blur → restore if empty
+                var blurReg = regBase.MakeGenericMethod(blurT);
+                Action<UnityEngine.UIElements.BlurEvent> blurH = _ =>
+                {
+                    var t2 = Activator.CreateInstance(UIRuntime.TextFieldType, new object[] { _ptr });
+                    if (string.IsNullOrEmpty((string)UIRuntime.TextFieldType.GetProperty("value").GetValue(t2) ?? ""))
+                    {
+                        UIRuntime.TextFieldType.GetProperty("value").SetValue(t2, placeholder);
+                        S.Color(UIRuntime.GetStyle(t2), phColor);
+                    }
+                };
+                blurReg.Invoke(tf, new object[] {
+                    Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<UnityEngine.UIElements.EventCallback<UnityEngine.UIElements.BlurEvent>>(blurH), td });
+            }
+            catch (Exception ex) { FrameworkPlugin.Log.Warning("[FakePH] " + ex.Message); }
+        }
+
 
         public void SetVisible(bool visible)
         {
