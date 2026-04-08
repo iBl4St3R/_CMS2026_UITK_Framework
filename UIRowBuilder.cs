@@ -155,8 +155,7 @@ namespace CMS2026UITKFramework
         public float Height => _height;
 
         // ── AddLabel ──────────────────────────────────────────────────────
-        public UILabelHandle AddLabel(string text, float width,
-                                      Color? color = null)
+        public UILabelHandle AddLabel(string text, float width,Color? color = null)
         {
             var lbl = Activator.CreateInstance(UIRuntime.LabelType);
             var s = UIRuntime.GetStyle(lbl);

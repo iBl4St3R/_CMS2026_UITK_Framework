@@ -1160,8 +1160,7 @@ namespace CMS2026UITKFramework
         }
 
         /// <summary>Creates a Button in an arbitrary container VE. Returns raw pointer.</summary>
-        public IntPtr AddButtonToContainer(object container, string text,
-            float x, float y, float w, float h, Color bg, Action onClick)
+        public IntPtr AddButtonToContainer(object container, string text,float x, float y, float w, float h, Color bg, Action onClick)
         {
             var btn = Activator.CreateInstance(UIRuntime.ButtonType);
             var s = UIRuntime.GetStyle(btn);
@@ -1182,6 +1181,9 @@ namespace CMS2026UITKFramework
             return UIRuntime.GetPtr(btn);
         }
 
+        public IntPtr AddButtonToContainer(IntPtr containerPtr, string text,float x, float y, float w, float h, Color bg, Action onClick) => AddButtonToContainer(UIRuntime.WrapVE(containerPtr), text, x, y, w, h, bg, onClick);
+        
+
         /// <summary>Creates a Label in an arbitrary container VE. Returns UILabelHandle.</summary>
         public UILabelHandle AddLabelToContainer(object container, string text,
             float x, float y, float w, float h, Color color)
@@ -1196,6 +1198,8 @@ namespace CMS2026UITKFramework
             UIRuntime.AddChild(container, lbl);
             return new UILabelHandle(UIRuntime.GetPtr(lbl));
         }
+
+        public UILabelHandle AddLabelToContainer(IntPtr containerPtr, string text,float x, float y, float w, float h, Color color) => AddLabelToContainer(UIRuntime.WrapVE(containerPtr), text, x, y, w, h, color);
 
 
         // ── Public panel API ───────────────────────────────────────────────

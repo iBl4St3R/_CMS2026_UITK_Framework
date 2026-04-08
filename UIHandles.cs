@@ -9,7 +9,7 @@ namespace CMS2026UITKFramework
     public class UILabelHandle
     {
         private readonly IntPtr _ptr;
-        internal UILabelHandle(IntPtr ptr) { _ptr = ptr; }
+        public UILabelHandle(IntPtr ptr) { _ptr = ptr; }
 
         public void SetText(string text)
         {

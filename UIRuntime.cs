@@ -19,11 +19,11 @@ namespace CMS2026UITKFramework
         internal static Assembly TRAsm;   // UnityEngine.TextRenderingModule
 
         // ── Core types ──────────────────────────────────────────────────────
-        internal static Type VisualElementType;
-        internal static Type LabelType;
-        internal static Type ButtonType;
-        internal static Type TextFieldType;
-        internal static Type ClickableType;
+        public static Type VisualElementType;
+        public static Type LabelType;
+        public static Type ButtonType;
+        public static Type TextFieldType;
+        public static Type ClickableType;
 
         // ── Style types ─────────────────────────────────────────────────────
         internal static Type IStyleType;
