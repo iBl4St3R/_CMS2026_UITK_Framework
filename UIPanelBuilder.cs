@@ -1206,11 +1206,29 @@ namespace CMS2026UITKFramework
 
         public bool IsVisible => _visible;
 
-        public void SetVisible(bool v) { _visible = v; ApplyDisplay(v); }
+        public void SetVisible(bool v)
+        {
+            if (_visible == v) return;      // bez zmiany — nie ruszaj licznika
+
+            _visible = v;
+            ApplyDisplay(v);
+
+            if (v)
+                CursorManager.Request();
+            else
+                CursorManager.Release();
+        }
+        
+
+
         public void Toggle() => SetVisible(!_visible);
 
         public void Destroy()
         {
+            // Jeśli panel był widoczny w momencie zniszczenia — zwolnij żądanie kursora
+            if (_visible)
+                CursorManager.Release();
+
             FrameworkPlugin.ActivePanels.Remove(this);
             if (_go != null) UnityEngine.Object.Destroy(_go);
         }
