@@ -1,6 +1,6 @@
 # _CMS2026_UITK_Framework
 
-![Version](https://img.shields.io/badge/version-0.1.0-blue)
+![Version](https://img.shields.io/badge/version-0.2.1-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![MelonLoader](https://img.shields.io/badge/MelonLoader-v0.7.2+-red)
 ![Game](https://img.shields.io/badge/game-CMS2026-orange)
