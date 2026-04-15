@@ -728,9 +728,12 @@ namespace CMS2026UITKFramework
 
             float rowY = _currentY + ElemH + ElemGap;
 
-            // Arrays filled in loop — handle holds references to the same arrays
             var fillPtrs = new IntPtr[3];
             var valuePtrs = new IntPtr[3];
+            var chLblPtrs = new IntPtr[3];
+            var trackPtrs = new IntPtr[3];
+            var btnMinusPtrs = new IntPtr[3];
+            var btnPlusPtrs = new IntPtr[3];
 
             var channelColors = new Color[]
             {
@@ -744,7 +747,9 @@ namespace CMS2026UITKFramework
 
             var handle = new UIColorPickerHandle(initial,
                 UIRuntime.GetPtr(preview),
+                UIRuntime.GetPtr(nameLbl),
                 fillPtrs, valuePtrs,
+                chLblPtrs, trackPtrs, btnMinusPtrs, btnPlusPtrs,
                 trackW, onChange);
 
             for (int i = 0; i < 3; i++)
@@ -761,10 +766,12 @@ namespace CMS2026UITKFramework
                 S.Color(cls, channelColors[i]); S.Font(cls);
                 UIRuntime.LabelType.GetProperty("text").SetValue(chLbl, chLabels[i]);
                 UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), chLbl);
+                chLblPtrs[i] = UIRuntime.GetPtr(chLbl);
 
                 // [−]
                 var btnMinus = MakeSmallBtn("−", 16f, y, BtnW, BtnH,
                                    new Color(0.40f, 0.12f, 0.12f, 1f));
+                btnMinusPtrs[i] = UIRuntime.GetPtr(btnMinus);
 
                 // Track
                 var track = UIRuntime.NewVE();
@@ -775,6 +782,7 @@ namespace CMS2026UITKFramework
                 S.BgColor(ts, new Color(0.18f, 0.18f, 0.22f, 1f));
                 S.Overflow(ts, "Hidden");
                 UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), track);
+                trackPtrs[i] = UIRuntime.GetPtr(track);
 
                 // Fill
                 var fill = UIRuntime.NewVE();
@@ -788,6 +796,8 @@ namespace CMS2026UITKFramework
 
                 // [+]
                 var btnPlus = MakeSmallBtn("+", 16f + BtnW + Gap + trackW + Gap, y, BtnW, BtnH, new Color(0.12f, 0.40f, 0.12f, 1f));
+                btnPlusPtrs[i] = UIRuntime.GetPtr(btnPlus);
+
 
                 // Value label
                 var valLbl = Activator.CreateInstance(UIRuntime.LabelType);
@@ -899,7 +909,9 @@ namespace CMS2026UITKFramework
 
             return new UIProgressBarHandle(
                 UIRuntime.GetPtr(fill),
+                 UIRuntime.GetPtr(track),
                 UIRuntime.GetPtr(pctLbl),
+                UIRuntime.GetPtr(nameLbl),
                 ContentW, clamped, fc);
         }
 

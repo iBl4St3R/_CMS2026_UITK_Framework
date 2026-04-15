@@ -261,7 +261,7 @@ namespace CMS2026UITKFramework
             UIRuntime.AddChild(track, fill);
 
             _currentX += width;
-            return new UIProgressBarHandle(UIRuntime.GetPtr(fill), IntPtr.Zero, width, clamped, fc);
+            return new UIProgressBarHandle(UIRuntime.GetPtr(fill), UIRuntime.GetPtr(track), IntPtr.Zero, IntPtr.Zero, width, clamped, fc);
         }
 
         // ── AddSeparator (vertical) ───────────────────────────────────────

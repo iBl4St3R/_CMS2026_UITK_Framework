@@ -401,22 +401,37 @@ namespace CMS2026UITKFramework
     {
         private Color _value;
         private readonly IntPtr _previewPtr;
+        private readonly IntPtr _nameLblPtr;       // ← nowe
         private readonly IntPtr[] _fillPtrs;
         private readonly IntPtr[] _valuePtrs;
+        private readonly IntPtr[] _chLblPtrs;      // ← nowe (R/G/B litery)
+        private readonly IntPtr[] _trackPtrs;      // ← nowe (szare tła)
+        private readonly IntPtr[] _btnMinusPtrs;   // ← nowe
+        private readonly IntPtr[] _btnPlusPtrs;    // ← nowe
         private readonly float _trackW;
         private Action<Color> _onChange;
 
         internal UIColorPickerHandle(Color initial,
-            IntPtr previewPtr, IntPtr[] fillPtrs, IntPtr[] valuePtrs,
+            IntPtr previewPtr, IntPtr nameLblPtr,
+            IntPtr[] fillPtrs, IntPtr[] valuePtrs,
+            IntPtr[] chLblPtrs, IntPtr[] trackPtrs,
+            IntPtr[] btnMinusPtrs, IntPtr[] btnPlusPtrs,
             float trackW, Action<Color> onChange)
         {
             _value = initial;
             _previewPtr = previewPtr;
+            _nameLblPtr = nameLblPtr;
             _fillPtrs = fillPtrs;
             _valuePtrs = valuePtrs;
+            _chLblPtrs = chLblPtrs;
+            _trackPtrs = trackPtrs;
+            _btnMinusPtrs = btnMinusPtrs;
+            _btnPlusPtrs = btnPlusPtrs;
             _trackW = trackW;
             _onChange = onChange;
         }
+
+        // SetValue, StepChannel, Refresh, SeekChannel — BEZ ZMIAN
 
         public Color GetValue() => _value;
 
@@ -458,9 +473,49 @@ namespace CMS2026UITKFramework
 
         public void SetVisible(bool visible)
         {
-            if (_previewPtr == IntPtr.Zero) return;
-            var ve = Activator.CreateInstance(UIRuntime.VisualElementType, new object[] { _previewPtr });
-            S.Display(UIRuntime.GetStyle(ve), visible);
+            if (_previewPtr != IntPtr.Zero)
+            {
+                var ve = Activator.CreateInstance(UIRuntime.VisualElementType, new object[] { _previewPtr });
+                S.Display(UIRuntime.GetStyle(ve), visible);
+            }
+            if (_nameLblPtr != IntPtr.Zero)
+            {
+                var lbl = Activator.CreateInstance(UIRuntime.LabelType, new object[] { _nameLblPtr });
+                S.Display(UIRuntime.GetStyle(lbl), visible);
+            }
+            for (int i = 0; i < 3; i++)
+            {
+                if (_fillPtrs[i] != IntPtr.Zero)
+                {
+                    var fill = Activator.CreateInstance(UIRuntime.VisualElementType, new object[] { _fillPtrs[i] });
+                    S.Display(UIRuntime.GetStyle(fill), visible);
+                }
+                if (_valuePtrs[i] != IntPtr.Zero)
+                {
+                    var lbl = Activator.CreateInstance(UIRuntime.LabelType, new object[] { _valuePtrs[i] });
+                    S.Display(UIRuntime.GetStyle(lbl), visible);
+                }
+                if (_chLblPtrs[i] != IntPtr.Zero)
+                {
+                    var lbl = Activator.CreateInstance(UIRuntime.LabelType, new object[] { _chLblPtrs[i] });
+                    S.Display(UIRuntime.GetStyle(lbl), visible);
+                }
+                if (_trackPtrs[i] != IntPtr.Zero)
+                {
+                    var ve = Activator.CreateInstance(UIRuntime.VisualElementType, new object[] { _trackPtrs[i] });
+                    S.Display(UIRuntime.GetStyle(ve), visible);
+                }
+                if (_btnMinusPtrs[i] != IntPtr.Zero)
+                {
+                    var btn = Activator.CreateInstance(UIRuntime.ButtonType, new object[] { _btnMinusPtrs[i] });
+                    S.Display(UIRuntime.GetStyle(btn), visible);
+                }
+                if (_btnPlusPtrs[i] != IntPtr.Zero)
+                {
+                    var btn = Activator.CreateInstance(UIRuntime.ButtonType, new object[] { _btnPlusPtrs[i] });
+                    S.Display(UIRuntime.GetStyle(btn), visible);
+                }
+            }
         }
 
         public void SeekChannel(int channel, float localX)
@@ -529,17 +584,22 @@ namespace CMS2026UITKFramework
     // ── ProgressBar ───────────────────────────────────────────────────────────
     public class UIProgressBarHandle
     {
-        private float _value;           // 0–1
+        private float _value;
         private readonly IntPtr _fillPtr;
+        private readonly IntPtr _trackPtr;
         private readonly IntPtr _labelPtr;
+        private readonly IntPtr _nameLblPtr;   
         private readonly float _trackW;
         private Color _fillColor;
 
-        internal UIProgressBarHandle(IntPtr fillPtr, IntPtr labelPtr,
+        internal UIProgressBarHandle(IntPtr fillPtr, IntPtr trackPtr,
+                                      IntPtr labelPtr, IntPtr nameLblPtr,   // ← nowy param
                                       float trackW, float initial, Color fillColor)
         {
             _fillPtr = fillPtr;
+            _trackPtr = trackPtr;
             _labelPtr = labelPtr;
+            _nameLblPtr = nameLblPtr;   
             _trackW = trackW;
             _fillColor = fillColor;
             _value = Mathf.Clamp01(initial);
@@ -562,11 +622,21 @@ namespace CMS2026UITKFramework
 
         public void SetVisible(bool visible)
         {
-            if (_fillPtr == IntPtr.Zero) return;
-            // We hide fill; label hides itself when no ptr
-            var ve = Activator.CreateInstance(UIRuntime.VisualElementType,
-                         new object[] { _fillPtr });
-            S.Display(UIRuntime.GetStyle(ve), visible);
+            if (_trackPtr != IntPtr.Zero)
+            {
+                var track = Activator.CreateInstance(UIRuntime.VisualElementType, new object[] { _trackPtr });
+                S.Display(UIRuntime.GetStyle(track), visible);
+            }
+            if (_labelPtr != IntPtr.Zero)
+            {
+                var lbl = Activator.CreateInstance(UIRuntime.LabelType, new object[] { _labelPtr });
+                S.Display(UIRuntime.GetStyle(lbl), visible);
+            }
+            if (_nameLblPtr != IntPtr.Zero)   // ← nowe
+            {
+                var lbl = Activator.CreateInstance(UIRuntime.LabelType, new object[] { _nameLblPtr });
+                S.Display(UIRuntime.GetStyle(lbl), visible);
+            }
         }
 
         public IntPtr GetFillPtr() => _fillPtr;
