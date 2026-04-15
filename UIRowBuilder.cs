@@ -34,14 +34,30 @@ namespace CMS2026UITKFramework
         /// Lista otwiera się nad/pod wierszem i nie jest przycinana przez viewport.
         /// Wymaga, aby UIRowBuilder był tworzony przez panel.AddRow() (nie ręcznie).
         /// </summary>
-        public UIDropdownHandle AddDropdown(string label,string[] options,int selectedIndex = 0,Action<int> onChanged = null,float width = 100f,int maxVisible = 5)
+        public UIDropdownHandle AddDropdown(string label, string[] options, int selectedIndex = 0, Action<int> onChanged = null, float width = 100f, int maxVisible = 5)
         {
             options ??= Array.Empty<string>();
-            int sel = Mathf.Clamp(selectedIndex, 0,
-                                  Mathf.Max(0, options.Length - 1));
+            int sel = Mathf.Clamp(selectedIndex, 0, Mathf.Max(0, options.Length - 1));
 
-            //const float BtnH = 24f;
             const float OptionH = 24f;
+
+            // ── Optional section label (inline, left of button) ───────────────
+            IntPtr sectionLblPtr = IntPtr.Zero;
+            if (!string.IsNullOrEmpty(label))
+            {
+                float lblW = Mathf.Max(40f, label.Length * 7f);
+                var sLbl = Activator.CreateInstance(UIRuntime.LabelType);
+                var sls = UIRuntime.GetStyle(sLbl);
+                S.Position(sls, "Absolute");
+                S.Left(sls, _currentX); S.Top(sls, 0f);
+                S.Width(sls, lblW); S.Height(sls, _height);
+                S.Color(sls, Color.white); S.Font(sls);
+                S.TextAlign(sls, TextAnchor.MiddleLeft);
+                UIRuntime.LabelType.GetProperty("text").SetValue(sLbl, label);
+                UIRuntime.AddChild(UIRuntime.WrapVE(_containerPtr), sLbl);
+                sectionLblPtr = UIRuntime.GetPtr(sLbl);
+                _currentX += lblW;
+            }
 
             // ── Header button w wierszu ────────────────────────────────────
             var headerBtn = Activator.CreateInstance(UIRuntime.ButtonType);
@@ -88,7 +104,8 @@ namespace CMS2026UITKFramework
             listLeftInPanel,
             _panel != null ? () => _panel.GetScrollY() : (Func<float>)(() => 0f),
             _panel != null ? () => _panel.GetPanelX() : (Func<float>)(() => 0f),
-            _panel != null ? () => _panel.GetPanelY() : (Func<float>)(() => 0f));
+            _panel != null ? () => _panel.GetPanelY() : (Func<float>)(() => 0f),
+            sectionLblPtr);
             // default(IntPtr) — brak section label w row dropdownie, pomijamy
 
             WireClick(headerBtn, () => handle.Toggle());
@@ -174,6 +191,9 @@ namespace CMS2026UITKFramework
             _currentX += width;
             return new UILabelHandle(UIRuntime.GetPtr(lbl));
         }
+
+
+
 
         // ── AddButton ─────────────────────────────────────────────────────
         public UIButtonHandle AddButton(string label, float width,
