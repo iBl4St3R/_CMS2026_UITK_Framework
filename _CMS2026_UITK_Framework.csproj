@@ -67,4 +67,13 @@
     </Reference>
   </ItemGroup>
 
+ <Target Name="CopyToMods" AfterTargets="Build">
+    <Copy
+      SourceFiles="$(OutputPath)$(AssemblyName).dll"
+      DestinationFolder="$(GameDir)\Mods"
+      OverwriteReadOnlyFiles="true"
+    />
+  </Target>
+
+
 </Project>

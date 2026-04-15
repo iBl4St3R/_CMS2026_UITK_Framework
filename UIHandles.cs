@@ -710,8 +710,8 @@ namespace CMS2026UITKFramework
         internal bool IsOpenAndContains(float uitY, float panelY)
         {
             if (!_open) return false;
-            float listTop = panelY + _listTopInPanel;
-            float listBottom = listTop + (_optionPtrs.Count * 24f); // OptionH = 24
+            float listTop = panelY + _listTopInPanel - (_getScrollY?.Invoke() ?? 0f);
+            float listBottom = listTop + (_optionPtrs.Count * 24f);
             return uitY >= listTop && uitY <= listBottom;
         }
 

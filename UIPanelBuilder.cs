@@ -137,7 +137,6 @@ namespace CMS2026UITKFramework
             S.Left(s, _x); S.Top(s, _y);
             S.Width(s, _width); S.Height(s, _height);
             S.BgColor(s, new Color(0.08f, 0.08f, 0.10f, 0.93f));
-            S.Overflow(s, "Hidden");
             UIRuntime.AddChild(root, panel);
             _panelPtr = UIRuntime.GetPtr(panel);
 
