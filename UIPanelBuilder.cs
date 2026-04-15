@@ -137,6 +137,7 @@ namespace CMS2026UITKFramework
             S.Left(s, _x); S.Top(s, _y);
             S.Width(s, _width); S.Height(s, _height);
             S.BgColor(s, new Color(0.08f, 0.08f, 0.10f, 0.93f));
+            S.Overflow(s, "Hidden");
             UIRuntime.AddChild(root, panel);
             _panelPtr = UIRuntime.GetPtr(panel);
 
@@ -963,15 +964,17 @@ namespace CMS2026UITKFramework
             S.BgColor(lcs, new Color(0.10f, 0.14f, 0.22f, 0.98f));
             S.Overflow(lcs, "Hidden");
             S.Display(lcs, false);
-            // ← dodaj do PANELU, nie do contentPtr
-            UIRuntime.AddChild(UIRuntime.WrapVE(_panelPtr), listContainer);
+            UIRuntime.AddChild(UIRuntime.WrapVE(_rootPtr), listContainer);
 
             var handle = new UIDropdownHandle(
                 UIRuntime.GetPtr(headerBtn),
                 UIRuntime.GetPtr(listContainer),
                 options, sel, onChange,
                 listTopInPanel,
-                () => _scrollY);
+                Pad,          // listLeftInPanel
+                () => _scrollY,
+                () => _x,
+                () => _y);
 
             WireClick(headerBtn, () => handle.Toggle());
 
@@ -1030,6 +1033,11 @@ namespace CMS2026UITKFramework
             _currentY = btnY + BtnH + ElemGap;
             return handle;
         }
+
+        internal float GetPanelX() => _x;
+        internal float GetPanelY() => _y;
+        internal void AddToRoot(object ve) => UIRuntime.AddChild(UIRuntime.WrapVE(_rootPtr), ve);
+
 
         public void AddSeparator(Color? color = null)
         {

@@ -607,11 +607,18 @@ namespace CMS2026UITKFramework
         private float _listTopInPanel;
         private Func<float> _getScrollY;
 
+        private float _listLeftInPanel;        
+        private Func<float> _getPanelX;        
+        private Func<float> _getPanelY;
+
         internal UIDropdownHandle(IntPtr headerBtnPtr, IntPtr listContainerPtr,
-                                   string[] options, int selected,
-                                   Action<int> onChange,
-                                   float listTopInPanel,
-                                   Func<float> getScrollY)
+                              string[] options, int selected,
+                              Action<int> onChange,
+                              float listTopInPanel,
+                              float listLeftInPanel,      
+                              Func<float> getScrollY,
+                              Func<float> getPanelX,     
+                              Func<float> getPanelY)      
         {
             _headerBtnPtr = headerBtnPtr;
             _listContainerPtr = listContainerPtr;
@@ -620,6 +627,9 @@ namespace CMS2026UITKFramework
             _onChange = onChange;
             _listTopInPanel = listTopInPanel;
             _getScrollY = getScrollY;
+            _listLeftInPanel = listLeftInPanel;
+            _getPanelX = getPanelX;
+            _getPanelY = getPanelY;
         }
 
         public int SelectedIndex => _selected;
@@ -674,8 +684,11 @@ namespace CMS2026UITKFramework
                                 new object[] { _listContainerPtr });
             if (open)
             {
-                float top = _listTopInPanel - (_getScrollY?.Invoke() ?? 0f);
+                // Teraz w absolutnych współrzędnych ekranu — działa po przeciągnięciu
+                float top = _getPanelY() + _listTopInPanel - (_getScrollY?.Invoke() ?? 0f);
+                float left = _getPanelX() + _listLeftInPanel;
                 S.Top(UIRuntime.GetStyle(container), top);
+                S.Left(UIRuntime.GetStyle(container), left);
                 RefreshOptionHighlights();
             }
             S.Display(UIRuntime.GetStyle(container), open);

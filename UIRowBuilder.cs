@@ -76,17 +76,19 @@ namespace CMS2026UITKFramework
 
             // Fallback gdy builder tworzony poza panelem (nie powinno się zdarzyć)
             if (_panel == null)
-            {
                 UIRuntime.AddChild(UIRuntime.WrapVE(_containerPtr), listContainer);
-            }
             else
-            {
-                _panel.AddOverlayToPanel(listContainer);
-            }
+                _panel.AddToRoot(listContainer);   // ← root zamiast overlay
 
-            var handle = new UIDropdownHandle(UIRuntime.GetPtr(headerBtn),UIRuntime.GetPtr(listContainer),options, sel, onChanged,listTopInPanel,
-                _panel != null ? () => _panel.GetScrollY() : (Func<float>)(() => 0f));
-
+            var handle = new UIDropdownHandle(
+            UIRuntime.GetPtr(headerBtn),
+            UIRuntime.GetPtr(listContainer),
+            options, sel, onChanged,
+            listTopInPanel,
+            listLeftInPanel,
+            _panel != null ? () => _panel.GetScrollY() : (Func<float>)(() => 0f),
+            _panel != null ? () => _panel.GetPanelX() : (Func<float>)(() => 0f),
+            _panel != null ? () => _panel.GetPanelY() : (Func<float>)(() => 0f));
             WireClick(headerBtn, () => handle.Toggle());
 
             // ── Opcje z hover ──────────────────────────────────────────────
