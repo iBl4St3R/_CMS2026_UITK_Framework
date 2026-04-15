@@ -986,7 +986,9 @@ namespace CMS2026UITKFramework
                 Pad,          // listLeftInPanel
                 () => _scrollY,
                 () => _x,
-                () => _y);
+                () => _y,
+                UIRuntime.GetPtr(nameLbl));
+                
 
             WireClick(headerBtn, () => handle.Toggle());
 

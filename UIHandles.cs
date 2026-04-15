@@ -680,6 +680,7 @@ namespace CMS2026UITKFramework
         private float _listLeftInPanel;        
         private Func<float> _getPanelX;        
         private Func<float> _getPanelY;
+        private readonly IntPtr _sectionLblPtr;
 
         internal UIDropdownHandle(IntPtr headerBtnPtr, IntPtr listContainerPtr,
                               string[] options, int selected,
@@ -688,7 +689,8 @@ namespace CMS2026UITKFramework
                               float listLeftInPanel,      
                               Func<float> getScrollY,
                               Func<float> getPanelX,     
-                              Func<float> getPanelY)      
+                              Func<float> getPanelY,
+                              IntPtr sectionLblPtr = default)     
         {
             _headerBtnPtr = headerBtnPtr;
             _listContainerPtr = listContainerPtr;
@@ -700,6 +702,7 @@ namespace CMS2026UITKFramework
             _listLeftInPanel = listLeftInPanel;
             _getPanelX = getPanelX;
             _getPanelY = getPanelY;
+            _sectionLblPtr = sectionLblPtr;
         }
 
         public int SelectedIndex => _selected;
@@ -743,6 +746,11 @@ namespace CMS2026UITKFramework
             if (_headerBtnPtr == IntPtr.Zero) return;
             var btn = Activator.CreateInstance(UIRuntime.ButtonType, new object[] { _headerBtnPtr });
             S.Display(UIRuntime.GetStyle(btn), visible);
+            if (_sectionLblPtr != IntPtr.Zero)
+            {
+                var lbl = Activator.CreateInstance(UIRuntime.LabelType, new object[] { _sectionLblPtr });
+                S.Display(UIRuntime.GetStyle(lbl), visible);
+            }
             if (!visible) SetOpen(false);
         }
 

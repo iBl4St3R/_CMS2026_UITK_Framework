@@ -89,6 +89,8 @@ namespace CMS2026UITKFramework
             _panel != null ? () => _panel.GetScrollY() : (Func<float>)(() => 0f),
             _panel != null ? () => _panel.GetPanelX() : (Func<float>)(() => 0f),
             _panel != null ? () => _panel.GetPanelY() : (Func<float>)(() => 0f));
+            // default(IntPtr) — brak section label w row dropdownie, pomijamy
+
             WireClick(headerBtn, () => handle.Toggle());
 
             // ── Opcje z hover ──────────────────────────────────────────────
