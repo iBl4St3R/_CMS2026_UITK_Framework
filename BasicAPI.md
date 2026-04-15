@@ -1,5 +1,5 @@
 # CMS2026 UITK Framework — Basic API
-Version 0.1.0 | Author: Blaster
+Version 0.2.1 | Author: Blaster
 
 ## Setup
 
@@ -30,21 +30,21 @@ var panel = FrameworkAPI.CreatePanel(
 
 ## Panel Methods
 ```csharp
-panel.SetVisible(bool);       // show/hide
-panel.Toggle();               // flip visibility
-panel.Destroy();              // remove from scene
-panel.IsVisible;              // current state
+panel.SetVisible(bool);
+panel.Toggle();
+panel.Destroy();
+panel.IsVisible;
 
-panel.SetScrollbarVisible(bool);              // show scrollbar strip
+panel.SetScrollbarVisible(bool);
 panel.SetScrollMode(ScrollMode.Auto);         // Auto or Always
 panel.SetScrollbarColors(trackColor, thumbColor);
-panel.SetDragWhenScrollable(bool);            // allow drag while scrolling
+panel.SetDragWhenScrollable(bool);
 panel.ScrollTo(float y);
 panel.ScrollToTop();
 panel.ScrollToBottom();
-panel.SetSortOrder(int);                      // change z-order at runtime
-panel.SetUpdateCallback(dt => { });           // called every frame
-panel.GetPanelRawPtr();                       // advanced — raw VE pointer
+panel.SetSortOrder(int);
+panel.SetUpdateCallback(dt => { });
+panel.GetPanelRawPtr();
 ```
 
 ## Elements
@@ -67,7 +67,7 @@ var hdr = panel.AddHeader("Section Name");
 
 ### Button
 ```csharp
-var btn = panel.AddButton("Click me!", () => { /* onClick */ }, bgColor: null, height: 26f);
+var btn = panel.AddButton("Click me!", () => { }, bgColor: null, height: 26f);
 btn.SetText("New label");
 btn.SetBgColor(Color.blue);
 btn.SetTextColor(Color.yellow);
@@ -84,7 +84,7 @@ btn.SetVisible(bool);
 ```csharp
 var tog = panel.AddToggle("God Mode", initial: false, onChange: v => { });
 tog.SetValue(true);
-tog.Value;        // current state
+tog.Value;
 tog.SetVisible(bool);
 ```
 
@@ -101,7 +101,7 @@ sld.Value;
 var pb = panel.AddProgressBar("HP", initial: 0.75f, fillColor: Color.green, height: 26f);
 pb.SetValue(0.5f);    // 0.0 – 1.0
 pb.SetColor(Color.red);
-pb.SetVisible(bool);
+pb.SetVisible(bool);  // hides bar, percent label and name label
 pb.Value;
 ```
 
@@ -119,7 +119,7 @@ input.SetVisible(bool);
 var cp = panel.AddColorPicker("Player Color", Color.white, onChange: c => { }, step: 5);
 cp.GetValue();
 cp.SetValue(Color.red);
-cp.SetVisible(bool);
+cp.SetVisible(bool);  // hides all sliders, buttons and preview swatch
 ```
 
 ### Dropdown
@@ -130,7 +130,8 @@ dd.SelectedIndex;
 dd.SelectedValue;
 dd.SetSelected(1);
 dd.SetOptions(new[]{"A","B","C"}, selectedIndex: 0);
-dd.SetVisible(bool);
+dd.SetVisible(bool);  // hides header button and section label
+// dropdown list renders outside panel bounds — not clipped at bottom edge
 ```
 
 ### Image
@@ -150,19 +151,22 @@ panel.AddSpace(pixels: 8f);
 
 ### Row (Multi-column layout)
 ```csharp
-// Creates a horizontal row — elements added to it go left-to-right
 var row = panel.AddRow(height: 26f, gap: 4f);
 
-// Available on UIRowBuilder:
-row.RemainingWidth;          // how much horizontal space is left
-row.Height;                  // row height
+row.RemainingWidth;
+row.Height;
 
 row.AddLabel("text", width: 100f, color: Color.white);
 row.AddButton("Btn", width: 80f, onClick: () => { }, bgColor: null);
 row.AddToggle(width: 64f, initial: false, onChange: v => { });
 row.AddProgressBar(width: 120f, initial: 0.5f, fillColor: Color.green);
-row.AddSeparator(separatorWidth: 1f, color: null);  // vertical divider
+row.AddSeparator(separatorWidth: 1f, color: null);
 row.AddSpace(pixels: 8f);
+
+// Inline dropdown — label rendered to the left of the button
+// Pass empty string "" to skip the label
+row.AddDropdown("Mode:", new[]{"A","B","C"}, selectedIndex: 0,
+    onChanged: i => { }, width: 120f, maxVisible: 5);
 ```
 
 ## Live Update
@@ -203,5 +207,5 @@ imgConvType.GetMethod("LoadImage", new Type[] { typeof(Texture2D), il2Bytes.GetT
 ## Known Limitations
 
 - UI Toolkit renders **below** the game's native Canvas during scene transitions.
-- `SetScaleMode` is not available in Unity 6 (API changed — `backgroundSize` struct required).
+- `SetScaleMode` on Image/Label has no effect — Unity 6 changed the API (`backgroundSize` struct required, not yet implemented).
 - `SetSize` on Label/Button does not reflow elements below it (absolute layout).
