@@ -1,5 +1,5 @@
 # CMS2026 UITK Framework — Basic API
-Version 0.2.1 | Author: Blaster
+Version 0.2.2 | Author: Blaster
 
 ## Setup
 
