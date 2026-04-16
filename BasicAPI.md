@@ -206,6 +206,5 @@ imgConvType.GetMethod("LoadImage", new Type[] { typeof(Texture2D), il2Bytes.GetT
 
 ## Known Limitations
 
-- UI Toolkit renders **below** the game's native Canvas during scene transitions.
 - `SetScaleMode` on Image/Label has no effect — Unity 6 changed the API (`backgroundSize` struct required, not yet implemented).
 - `SetSize` on Label/Button does not reflow elements below it (absolute layout).
