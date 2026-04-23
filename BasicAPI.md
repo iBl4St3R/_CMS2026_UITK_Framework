@@ -128,9 +128,11 @@ var dd = panel.AddDropdown("Mode", new[]{"Normal","Turbo","Debug"},
     selectedIndex: 0, onChange: i => { }, maxVisible: 5);
 dd.SelectedIndex;
 dd.SelectedValue;
-dd.SetSelected(1);
+dd.SetSelected(1);   // sets selection + fires onChange
+dd.SetIndex(1);      // sets selection silently — no onChange fired
+                     // use for programmatic/external resets
 dd.SetOptions(new[]{"A","B","C"}, selectedIndex: 0);
-dd.SetVisible(bool);  // hides header button and section label
+dd.SetVisible(bool); // hides header button and section label
 // dropdown list renders outside panel bounds — not clipped at bottom edge
 ```
 
