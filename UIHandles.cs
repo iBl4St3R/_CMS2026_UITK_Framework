@@ -728,6 +728,18 @@ namespace CMS2026UITKFramework
             _onChange?.Invoke(_selected);
         }
 
+        /// <summary>
+        /// Programmatically sets the selected index without firing onChange.
+        /// Use this for external resets (e.g. resetting config when a parent dropdown changes).
+        /// </summary>
+        public void SetIndex(int index)         // cicha wersja, bez _onChange
+        {
+            if (_options == null || index < 0 || index >= _options.Length) return;
+            _selected = index;
+            RefreshHeader();
+            RefreshOptionHighlights();
+        }
+
         public void SetOptions(string[] options, int selectedIndex = 0)
         {
             _options = options ?? Array.Empty<string>();
