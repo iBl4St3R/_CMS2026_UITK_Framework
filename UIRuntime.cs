@@ -15,8 +15,8 @@ namespace CMS2026UITKFramework
         public static bool IsAvailable { get; private set; }
 
         // ── Assemblies ──────────────────────────────────────────────────────
-        internal static Assembly UEAsm;   // UnityEngine.UIElementsModule
-        internal static Assembly TRAsm;   // UnityEngine.TextRenderingModule
+        public static Assembly UEAsm;   // UnityEngine.UIElementsModule
+        public static Assembly TRAsm;   // UnityEngine.TextRenderingModule
 
         // ── Core types ──────────────────────────────────────────────────────
         public static Type VisualElementType;
@@ -32,6 +32,8 @@ namespace CMS2026UITKFramework
         internal static Type StyleFloatType;
         internal static Type StyleFontDefinitionType;
         internal static Type FontDefinitionType;
+        internal static Type ScaleType;
+        internal static Type StyleScaleType;
 
         // ── Enum style wrappers ─────────────────────────────────────────────
         internal static Type PositionType;
@@ -56,6 +58,8 @@ namespace CMS2026UITKFramework
         internal static ConstructorInfo StyleFloatCtor;
         internal static ConstructorInfo StyleFontDefCtor;
         internal static ConstructorInfo StylePositionCtor;
+        internal static ConstructorInfo ScaleCtor;
+        internal static ConstructorInfo StyleScaleCtor;
         internal static ConstructorInfo StyleOverflowCtor;
         internal static ConstructorInfo StyleDisplayCtor;
         internal static ConstructorInfo StyleAlignCtor;
@@ -120,6 +124,9 @@ namespace CMS2026UITKFramework
             FontDefinitionType = UEAsm.GetType("UnityEngine.UIElements.FontDefinition");
             StyleFontDefinitionType = UEAsm.GetType("UnityEngine.UIElements.StyleFontDefinition");
 
+            ScaleType = UEAsm.GetType("UnityEngine.UIElements.Scale");
+            StyleScaleType = UEAsm.GetType("UnityEngine.UIElements.StyleScale");
+
             PositionType = UEAsm.GetType("UnityEngine.UIElements.Position");
             StylePositionType = MakeStyleEnum(PositionType);
 
@@ -150,6 +157,8 @@ namespace CMS2026UITKFramework
             StyleColorCtor = StyleColorType.GetConstructor(new[] { typeof(Color) });
             StyleFloatCtor = StyleFloatType.GetConstructor(new[] { typeof(float) });
             StyleFontDefCtor = StyleFontDefinitionType.GetConstructor(new[] { FontDefinitionType });
+            ScaleCtor = ScaleType.GetConstructor(new[] { typeof(Vector3) });
+            StyleScaleCtor = StyleScaleType.GetConstructor(new[] { ScaleType });
             StylePositionCtor = StylePositionType.GetConstructor(new[] { PositionType });
             StyleOverflowCtor = StyleOverflowType.GetConstructor(new[] { OverflowType });
             StyleDisplayCtor = StyleDisplayType.GetConstructor(new[] { DisplayStyleType });

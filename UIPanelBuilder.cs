@@ -37,6 +37,8 @@ namespace CMS2026UITKFramework
 
         private bool _isWorldSpace;
         private GameObject _worldAnchor;
+        private Vector2 _worldSizeMeters;
+        private float _pixelsPerUnit;
 
         private const float TitleH = 24f;
         private const float Pad = 6f;
@@ -100,6 +102,10 @@ namespace CMS2026UITKFramework
 
         internal float GetScrollY() => _scrollY;
 
+        public GameObject GetWorldAnchor() => _worldAnchor;
+        public float GetPixelsPerUnit() => _pixelsPerUnit;
+        public Vector2 GetWorldSizeMeters() => _worldSizeMeters;
+
         internal void RegisterDropdownHandle(UIDropdownHandle dd)
             => _dropdownHandles.Add(dd);
 
@@ -157,6 +163,8 @@ namespace CMS2026UITKFramework
             _x = 0f; _y = 0f;
             _width = worldSizeMeters.x * ppu;
             _height = worldSizeMeters.y * ppu;
+            _worldSizeMeters = worldSizeMeters;
+            _pixelsPerUnit = ppu;
 
             BuildPanel(root);
             FrameworkPlugin.ActivePanels.Add(this);
@@ -1088,7 +1096,7 @@ namespace CMS2026UITKFramework
         internal float GetPanelX() => _x;
         internal float GetPanelY() => _y;
         internal void AddToRoot(object ve) => UIRuntime.AddChild(UIRuntime.WrapVE(_rootPtr), ve);
-
+        public object GetRootVE() => UIRuntime.WrapVE(_rootPtr);
 
         public void AddSeparator(Color? color = null)
         {

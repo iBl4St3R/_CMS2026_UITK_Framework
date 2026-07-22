@@ -91,8 +91,9 @@ namespace CMS2026UITKFramework
 
         }
 
-        public static void BgTint(object s, Color c)
-            => SetProp(s, "unityBackgroundImageTintColor", Sc(c));
+        public static void BgTint(object s, Color c) => SetProp(s, "unityBackgroundImageTintColor", Sc(c));
+
+        public static void Scale(object s, float x, float y) => SetProp(s, "scale", UIRuntime.StyleScaleCtor.Invoke(new object[] { UIRuntime.ScaleCtor.Invoke(new object[] { new Vector3(x, y, 1f) }) }));
 
         public static void BgScaleMode(object s, UnityEngine.ScaleMode mode)
         {
