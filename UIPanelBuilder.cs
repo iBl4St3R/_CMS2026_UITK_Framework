@@ -35,6 +35,9 @@ namespace CMS2026UITKFramework
         private object _panelSettings;
         private float _currentY = 0f;
 
+        private bool _isWorldSpace;
+        private GameObject _worldAnchor;
+
         private const float TitleH = 24f;
         private const float Pad = 6f;
         private const float ElemH = 26f;
@@ -125,6 +128,40 @@ namespace CMS2026UITKFramework
             FrameworkPlugin.ActivePanels.Add(this);
 
             SetSortOrder(sortOrder); // Ustawiamy to po zbudowaniu!
+
+            return this;
+        }
+
+        public UIPanel BuildWorldSpace(GameObject hostAnchor, Vector2 worldSizeMeters, float pixelsPerUnitOverride = 0f, bool colliderIsTrigger = true, int sortOrder = 9999)
+        {
+            if (!UIRuntime.IsAvailable) { FrameworkPlugin.Log.Warning("[UIPanel] UIRuntime not available"); return this; }
+            if (hostAnchor == null) { FrameworkPlugin.Log.Warning("[UIPanel] BuildWorldSpace: hostAnchor is null"); return this; }
+
+            _isWorldSpace = true;
+            _worldAnchor = hostAnchor;
+
+            _panelSettings = UIRuntime.CreateWorldSpacePanelSettings(colliderIsTrigger, pixelsPerUnitOverride, out float ppu);
+            var ps = _panelSettings;
+            _go = hostAnchor;
+
+            var docType = UIRuntime.UIDocumentType;
+            var docRaw = _go.AddComponent(Il2CppInterop.Runtime.Il2CppType.From(docType));
+            var docWrap = Activator.CreateInstance(docType, new object[] { ((Component)docRaw).Pointer });
+
+            docType.GetProperty("panelSettings").SetValue(docWrap, ps);
+            docType.GetProperty("worldSpaceSize").SetValue(docWrap, new Vector2(worldSizeMeters.x, worldSizeMeters.y));
+
+            var root = docType.GetProperty("rootVisualElement").GetValue(docWrap);
+            _rootPtr = UIRuntime.GetPtr(root);
+
+            _x = 0f; _y = 0f;
+            _width = worldSizeMeters.x * ppu;
+            _height = worldSizeMeters.y * ppu;
+
+            BuildPanel(root);
+            FrameworkPlugin.ActivePanels.Add(this);
+
+            SetSortOrder(sortOrder);
 
             return this;
         }
@@ -1234,12 +1271,14 @@ namespace CMS2026UITKFramework
             _visible = v;
             ApplyDisplay(v);
 
+            if (_isWorldSpace) return;      // mirror na ekranie nie steruje kursorem/trybem gry
+
             if (v)
                 CursorManager.Request();
             else
                 CursorManager.Release();
         }
-        
+
 
 
         public void Toggle() => SetVisible(!_visible);
@@ -1273,6 +1312,7 @@ namespace CMS2026UITKFramework
 
         private void HandleScroll()
         {
+            if (_isWorldSpace) return;
             if (!IsScrollable) return;
             float delta = Input.mouseScrollDelta.y;
             if (Mathf.Abs(delta) < 0.01f) return;
@@ -1429,6 +1469,7 @@ namespace CMS2026UITKFramework
 
         private void HandleDrag()
         {
+            if (_isWorldSpace) return;
             if (!_draggable) return; //api turnoff
 
             // Default: suppress drag when panel is scrollable (prevents

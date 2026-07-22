@@ -218,6 +218,41 @@ namespace CMS2026UITKFramework
             return wrap;
         }
 
+        internal static object CreateWorldSpacePanelSettings(bool colliderIsTrigger, float pixelsPerUnitOverride, out float pixelsPerUnit)
+        {
+            var il2Type = Il2CppInterop.Runtime.Il2CppType.From(PanelSettingsType);
+            var raw = UnityEngine.ScriptableObject.CreateInstance(il2Type);
+            var wrap = Activator.CreateInstance(PanelSettingsType, new object[] { raw.Pointer });
+
+            PanelSettingsType.GetProperty("scaleMode").SetValue(wrap, Enum.Parse(PanelScaleModeType, "ConstantPixelSize"));
+            PanelSettingsType.GetProperty("scale").SetValue(wrap, 1.0f);
+            PanelSettingsType.GetProperty("sortingOrder").SetValue(wrap, 9999);
+
+            var renderModeType = UEAsm.GetType("UnityEngine.UIElements.PanelRenderMode");
+            PanelSettingsType.GetProperty("renderMode").SetValue(wrap, Enum.Parse(renderModeType, "WorldSpace"));
+            PanelSettingsType.GetProperty("colliderIsTrigger").SetValue(wrap, colliderIsTrigger);
+
+            if (pixelsPerUnitOverride > 0f)
+                PanelSettingsType.GetProperty("pixelsPerUnit").SetValue(wrap, pixelsPerUnitOverride);
+            pixelsPerUnit = (float)PanelSettingsType.GetProperty("pixelsPerUnit").GetValue(wrap);
+
+            try
+            {
+                var tssType = UEAsm.GetType("UnityEngine.UIElements.ThemeStyleSheet");
+                if (tssType != null)
+                {
+                    var tssIl2 = Il2CppInterop.Runtime.Il2CppType.From(tssType);
+                    var tss = UnityEngine.ScriptableObject.CreateInstance(tssIl2);
+                    var tssWrap = Activator.CreateInstance(tssType, new object[] { tss.Pointer });
+                    var prop = PanelSettingsType.GetProperty("themeStyleSheet");
+                    prop?.SetValue(wrap, tssWrap);
+                }
+            }
+            catch { /* kosmetyczne, nie krytyczne */ }
+
+            return wrap;
+        }
+
 
         public static void SetBackgroundImage(object ve, Texture2D tex)
         {
