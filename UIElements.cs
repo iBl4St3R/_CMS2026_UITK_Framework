@@ -25,14 +25,22 @@ namespace CMS2026UITKFramework
         public static void Top(object s, float v) => SetProp(s, "top", Sl(v));
         public static void Width(object s, float v) => SetProp(s, "width", Sl(v));
         public static void Height(object s, float v) => SetProp(s, "height", Sl(v));
+        public static void MinHeight(object s, float v) => SetProp(s, "minHeight", Sl(v));
         public static void Opacity(object s, float v) => SetProp(s, "opacity", Sf(v));
 
         public static void BgColor(object s, Color c) => SetProp(s, "backgroundColor", Sc(c));
         public static void Color(object s, Color c) => SetProp(s, "color", Sc(c));
 
-        public static void Font(object s)
-            => SetProp(s, "unityFontDefinition",
-                UIRuntime.StyleFontDefCtor.Invoke(new object[] { UIRuntime.DefaultFontDef }));
+        public static void Font(object s) => SetProp(s, "unityFontDefinition", UIRuntime.StyleFontDefCtor.Invoke(new object[] { UIRuntime.DefaultFontDef }));
+
+        public static void WhiteSpaceNormal(object s)
+        {
+            var wsType = UIRuntime.UEAsm.GetType("UnityEngine.UIElements.WhiteSpace");
+            var swsType = UIRuntime.UEAsm.GetType("UnityEngine.UIElements.StyleEnum`1").MakeGenericType(wsType);
+            var ctor = swsType.GetConstructor(new[] { wsType });
+            SetProp(s, "whiteSpace", ctor.Invoke(new object[] { Enum.Parse(wsType, "Normal") }));
+        }
+
 
         public static void Position(object s, string v)
             => SetProp(s, "position",
