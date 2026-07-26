@@ -1301,6 +1301,33 @@ namespace CMS2026UITKFramework
             if (_go != null) UnityEngine.Object.Destroy(_go);
         }
 
+        /// <summary>
+        /// Removes keyboard focus from whatever element currently holds it in this panel's
+        /// document. Call when the player stops interacting with the panel (e.g. ESC out of
+        /// screen view) — without this, UI Toolkit keeps routing raw keyboard KeyDownEvents to
+        /// the last-focused element (e.g. a notepad TextField) regardless of the mouse/camera,
+        /// so gameplay keystrokes silently get typed into it.
+        /// </summary>
+        public void ClearFocus()
+        {
+            if (_rootPtr == IntPtr.Zero) return;
+            try
+            {
+                var root = UIRuntime.WrapVE(_rootPtr);
+                var panelObj = UIRuntime.VisualElementType.GetProperty("panel")?.GetValue(root);
+                if (panelObj == null) return;
+
+                var focusController = panelObj.GetType().GetProperty("focusController")?.GetValue(panelObj);
+                if (focusController == null) return;
+
+                var focused = focusController.GetType().GetProperty("focusedElement")?.GetValue(focusController);
+                if (focused == null) return;
+
+                focused.GetType().GetMethod("Blur")?.Invoke(focused, null);
+            }
+            catch (Exception ex) { FrameworkPlugin.Log.Warning($"[UIPanel] ClearFocus: {ex.Message}"); }
+        }
+
         // Called every frame by UIKitUpdater
         public void OnUpdate()
         {

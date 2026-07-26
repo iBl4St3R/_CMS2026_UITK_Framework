@@ -52,6 +52,9 @@ namespace CMS2026UITKFramework
         internal static Type StyleScaleModeType;
         internal static ConstructorInfo StyleScaleModeCtor;
 
+        internal static Type FontStyleType;
+        internal static Type StyleFontStyleType;
+
         // ── Constructors ────────────────────────────────────────────────────
         internal static ConstructorInfo StyleLengthCtor;
         internal static ConstructorInfo StyleColorCtor;
@@ -65,6 +68,7 @@ namespace CMS2026UITKFramework
         internal static ConstructorInfo StyleAlignCtor;
         internal static ConstructorInfo StyleJustifyCtor;
         internal static ConstructorInfo StyleTextAnchorCtor;
+        internal static ConstructorInfo StyleFontStyleCtor;
 
         // ── Font ────────────────────────────────────────────────────────────
         internal static object DefaultFontDef;
@@ -146,6 +150,8 @@ namespace CMS2026UITKFramework
             StyleTextAnchorType = MakeStyleEnum(TextAnchorType);
             ScaleModeType = typeof(UnityEngine.ScaleMode);
             StyleScaleModeType = MakeStyleEnum(ScaleModeType);
+            FontStyleType = typeof(UnityEngine.FontStyle);
+            StyleFontStyleType = MakeStyleEnum(FontStyleType);
         }
 
         private static Type MakeStyleEnum(Type enumType)
@@ -166,6 +172,7 @@ namespace CMS2026UITKFramework
             StyleJustifyCtor = StyleJustifyType.GetConstructor(new[] { JustifyType });
             StyleTextAnchorCtor = StyleTextAnchorType.GetConstructor(new[] { TextAnchorType });
             StyleScaleModeCtor = StyleScaleModeType.GetConstructor(new[] { ScaleModeType });
+            StyleFontStyleCtor = StyleFontStyleType.GetConstructor(new[] { FontStyleType });
         }
 
         private static void SetupFont()

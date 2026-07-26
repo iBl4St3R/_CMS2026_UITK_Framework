@@ -69,6 +69,15 @@ namespace CMS2026UITKFramework
             S.BorderWidth(UIRuntime.GetStyle(lbl), width);
         }
 
+        public void SetOutline(Color color, float width)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            var lbl = Activator.CreateInstance(UIRuntime.LabelType, new object[] { _ptr });
+            var s = UIRuntime.GetStyle(lbl);
+            S.TextOutlineColor(s, color);
+            S.TextOutlineWidth(s, width);
+        }
+
         public void SetTint(UnityEngine.Color color)
         {
             if (_ptr == IntPtr.Zero) return;
