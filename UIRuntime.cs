@@ -290,5 +290,26 @@ namespace CMS2026UITKFramework
                 FrameworkPlugin.Log.Error($"[UIRuntime] SetBackgroundImage: {ex.Message}");
             }
         }
+
+        /// <summary>Same as SetBackgroundImage but binds a live RenderTexture (used by the media player for video playback) instead of a static Texture2D.</summary>
+        public static void SetBackgroundRenderTexture(object ve, RenderTexture rt)
+        {
+            if (rt == null) return;
+            try
+            {
+                var bgType = UEAsm.GetType("UnityEngine.UIElements.Background");
+                var sbgType = UEAsm.GetType("UnityEngine.UIElements.StyleBackground");
+                var fromRT = bgType.GetMethod("FromRenderTexture", BindingFlags.Public | BindingFlags.Static);
+                var il2Rt = Activator.CreateInstance(typeof(RenderTexture), new object[] { rt.Pointer });
+                var bgValue = fromRT.Invoke(null, new object[] { il2Rt });
+                var sbgCtor = sbgType.GetConstructor(new[] { bgType });
+                var sbgValue = sbgCtor.Invoke(new object[] { bgValue });
+                IStyleType.GetProperty("backgroundImage").SetValue(GetStyle(ve), sbgValue);
+            }
+            catch (Exception ex)
+            {
+                FrameworkPlugin.Log.Error($"[UIRuntime] SetBackgroundRenderTexture: {ex.Message}");
+            }
+        }
     }
 }
