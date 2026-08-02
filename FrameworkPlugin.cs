@@ -44,6 +44,8 @@ namespace CMS2026UITKFramework
                 : "[UIKit] UIToolkit unavailable — standby");
         }
 
+       
+
         public override void OnSceneWasLoaded(int buildIndex, string sceneName)
         {
             if (_runtimeHost != null) return;
@@ -56,6 +58,18 @@ namespace CMS2026UITKFramework
 
             TryRegisterInConsole();
             RegisterFrameworkCommands();
+            ShowWelcomePrompt();
+        }
+        private static void ShowWelcomePrompt()
+        {
+            if (!UIRuntime.IsAvailable) return;
+            try
+            {
+                UIPrompt.Show(
+                    $"UITK Framework v{Version} by iBlaster started successfully.",
+                    PromptMode.Info, PromptPriority.Normal, 8f);
+            }
+            catch (Exception ex) { Log.Warning($"[UIKit] Welcome prompt failed: {ex.Message}"); }
         }
 
         private static void TryRegisterInConsole()

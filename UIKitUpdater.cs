@@ -25,6 +25,8 @@ namespace CMS2026UITKFramework
                 if (panels[i] == null) { panels.RemoveAt(i); continue; }
                 panels[i].OnUpdate();
             }
+
+            UIPromptManager.Tick(Time.deltaTime);
         }
     }
 }
