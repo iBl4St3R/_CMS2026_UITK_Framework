@@ -27,6 +27,8 @@ namespace CMS2026UITKFramework
             }
 
             UIPromptManager.Tick(Time.deltaTime);
+            UIShortcutBarManager.Tick(Time.deltaTime);
+            WorldMarkerManager.Tick(Time.deltaTime);
         }
     }
 }
