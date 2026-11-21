@@ -1,6 +1,9 @@
 {
   "permissions": {
-    "allow": [],
+    "allow": [
+		"Bash(bash Scripts/_build_check.sh)",
+		"Bash(bash ../GlideRail/Scripts/_check.sh:*)"
+	],
     "deny": [
       "Read(./bin/**)",
       "Read(./obj/**)",
