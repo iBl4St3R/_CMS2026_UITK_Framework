@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [],
+    "deny": [
+      "Read(./bin/**)",
+      "Read(./obj/**)",
+      "Read(./.git/**)",
+      "Read(./.vs/**)",
+      "Read(./**/bin/**)",
+      "Read(./**/obj/**)",
+      "Edit(./bin/**)",
+      "Edit(./obj/**)",
+      "Edit(./.vs/**)",
+      "Edit(./**/*.sln)",
+      "Edit(//c/Users/usmat/source/repos/cms2027assembly/**)",
+      "Edit(//c/Users/usmat/source/repos/GlideRail/**)",
+      "Edit(//c/Users/usmat/source/repos/NPCGarageHelper/**)",
+      "Edit(//c/Users/usmat/source/repos/TheBucket/**)",
+      "Edit(//c/Users/usmat/source/repos/CMS2026_OXL/**)",
+      "Edit(//c/Users/usmat/source/repos/BlastCoreOS/**)",
+      "Edit(//c/Program Files (x86)/Steam/steamapps/common/Car Mechanic Simulator 2026 Demo/**)"
+    ]
+  }
+}
