@@ -185,6 +185,7 @@ namespace CMS2026UITKFramework
             S.Overflow(s, "Hidden");
             UIRuntime.AddChild(root, panel);
             _panelPtr = UIRuntime.GetPtr(panel);
+            if (_defaultFontDef != null) S.FontDef(UIRuntime.GetStyle(root), _defaultFontDef); // dziedziczą surowe elementy (AddToRoot, AddRaw)
 
             BuildTitleBar(panel);
             BuildContentArea(panel);
@@ -210,7 +211,7 @@ namespace CMS2026UITKFramework
             S.Left(ls, 6f); S.Top(ls, 0f);
             S.Width(ls, _width - 6f); S.Height(ls, TitleH);
             S.Color(ls, Color.white);
-            S.Font(ls);
+            ApplyFont(ls);
             S.TextAlign(ls, TextAnchor.MiddleLeft);
             UIRuntime.LabelType.GetProperty("text").SetValue(lbl, _title);
             UIRuntime.AddChild(bar, lbl);
@@ -230,7 +231,7 @@ namespace CMS2026UITKFramework
                 S.Width(s, BtnW); S.Height(s, TitleH);
                 S.BgColor(s, bg);
                 S.Color(s, Color.white);
-                S.Font(s);
+                ApplyFont(s);
                 S.TextAlign(s, TextAnchor.MiddleCenter);
                 S.Padding(s, 0f);
                 UIRuntime.ButtonType.GetProperty("text").SetValue(btn, label);
@@ -514,7 +515,7 @@ namespace CMS2026UITKFramework
             S.Left(s, 0f); S.Top(s, _currentY);
             S.Width(s, ContentW); S.Height(s, height);
             S.Color(s, color ?? Color.white);
-            S.Font(s);
+            ApplyFont(s);
             UIRuntime.LabelType.GetProperty("text").SetValue(lbl, text);
             UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), lbl);
 
@@ -535,7 +536,7 @@ namespace CMS2026UITKFramework
             S.Width(s, ContentW); S.Height(s, height);
             S.BgColor(s, bgColor ?? new Color(0.18f, 0.28f, 0.48f, 1f));
             S.Color(s, Color.white);
-            S.Font(s);
+            ApplyFont(s);
             S.TextAlign(s, TextAnchor.MiddleCenter);
             S.Padding(s, 0f);
             UIRuntime.ButtonType.GetProperty("text").SetValue(btn, label);
@@ -579,7 +580,7 @@ namespace CMS2026UITKFramework
             S.Left(ls, 0f); S.Top(ls, _currentY);
             S.Width(ls, ContentW - 70f); S.Height(ls, ElemH);
             S.Color(ls, Color.white);
-            S.Font(ls);
+            ApplyFont(ls);
             UIRuntime.LabelType.GetProperty("text").SetValue(lbl, label);
             UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), lbl);
 
@@ -592,7 +593,7 @@ namespace CMS2026UITKFramework
                 ? new Color(0.18f, 0.58f, 0.28f, 1f)
                 : new Color(0.50f, 0.15f, 0.15f, 1f));
             S.Color(bs, Color.white);
-            S.Font(bs);
+            ApplyFont(bs);
             S.TextAlign(bs, TextAnchor.MiddleCenter);
             S.Padding(bs, 0f);
             UIRuntime.ButtonType.GetProperty("text").SetValue(btn, initial ? "ON" : "OFF");
@@ -628,7 +629,7 @@ namespace CMS2026UITKFramework
             S.Left(nls, 0f); S.Top(nls, _currentY);
             S.Width(nls, ContentW - 56f); S.Height(nls, ElemH);
             S.Color(nls, Color.white);
-            S.Font(nls);
+            ApplyFont(nls);
             UIRuntime.LabelType.GetProperty("text").SetValue(nameLbl, label);
             UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), nameLbl);
 
@@ -639,7 +640,7 @@ namespace CMS2026UITKFramework
             S.Left(vls, ContentW - 52f); S.Top(vls, _currentY);
             S.Width(vls, 52f); S.Height(vls, ElemH);
             S.Color(vls, new Color(0.80f, 1.00f, 0.80f, 1f));
-            S.Font(vls);
+            ApplyFont(vls);
             S.TextAlign(vls, TextAnchor.MiddleRight);
             string initStr = (step < 1f) ? clamped.ToString("F1") : ((int)clamped).ToString();
             UIRuntime.LabelType.GetProperty("text").SetValue(valLbl, initStr);
@@ -708,7 +709,7 @@ namespace CMS2026UITKFramework
             S.Width(s, ContentW); S.Height(s, height);
             S.BgColor(s, new Color(0.04f, 0.04f, 0.08f, 1f));
             S.Color(s, new Color(0.85f, 1f, 0.85f, 1f));
-            S.Font(s);
+            ApplyFont(s);
             UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), tf);
 
             var handle = new UITextInputHandle(UIRuntime.GetPtr(tf));
@@ -759,7 +760,7 @@ namespace CMS2026UITKFramework
             S.Position(nls, "Absolute");
             S.Left(nls, 0f); S.Top(nls, _currentY);
             S.Width(nls, ContentW - 32f); S.Height(nls, ElemH);
-            S.Color(nls, Color.white); S.Font(nls);
+            S.Color(nls, Color.white); ApplyFont(nls);
             UIRuntime.LabelType.GetProperty("text").SetValue(nameLbl, label);
             UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), nameLbl);
 
@@ -808,7 +809,7 @@ namespace CMS2026UITKFramework
                 S.Position(cls, "Absolute");
                 S.Left(cls, 0f); S.Top(cls, y);
                 S.Width(cls, 14f); S.Height(cls, BtnH);
-                S.Color(cls, channelColors[i]); S.Font(cls);
+                S.Color(cls, channelColors[i]); ApplyFont(cls);
                 UIRuntime.LabelType.GetProperty("text").SetValue(chLbl, chLabels[i]);
                 UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), chLbl);
                 chLblPtrs[i] = UIRuntime.GetPtr(chLbl);
@@ -850,7 +851,7 @@ namespace CMS2026UITKFramework
                 S.Position(vls, "Absolute");
                 S.Left(vls, 16f + BtnW + Gap + trackW + Gap + BtnW + Gap); S.Top(vls, y);
                 S.Width(vls, ValW); S.Height(vls, BtnH);
-                S.Color(vls, Color.white); S.Font(vls);
+                S.Color(vls, Color.white); ApplyFont(vls);
                 S.TextAlign(vls, TextAnchor.MiddleRight);
                 UIRuntime.LabelType.GetProperty("text").SetValue(valLbl, Mathf.RoundToInt(chValues[i] * 255f).ToString());
                 UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), valLbl);
@@ -913,7 +914,7 @@ namespace CMS2026UITKFramework
             S.Position(nls, "Absolute");
             S.Left(nls, 0f); S.Top(nls, _currentY);
             S.Width(nls, ContentW - 44f); S.Height(nls, ElemH);
-            S.Color(nls, Color.white); S.Font(nls);
+            S.Color(nls, Color.white); ApplyFont(nls);
             UIRuntime.LabelType.GetProperty("text").SetValue(nameLbl, label);
             UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), nameLbl);
 
@@ -923,7 +924,7 @@ namespace CMS2026UITKFramework
             S.Position(pls, "Absolute");
             S.Left(pls, ContentW - 40f); S.Top(pls, _currentY);
             S.Width(pls, 40f); S.Height(pls, ElemH);
-            S.Color(pls, new Color(0.80f, 1.00f, 0.80f, 1f)); S.Font(pls);
+            S.Color(pls, new Color(0.80f, 1.00f, 0.80f, 1f)); ApplyFont(pls);
             S.TextAlign(pls, TextAnchor.MiddleRight);
             UIRuntime.LabelType.GetProperty("text")
                 .SetValue(pctLbl, Mathf.RoundToInt(clamped * 100f) + "%");
@@ -985,7 +986,7 @@ namespace CMS2026UITKFramework
             S.Position(nls, "Absolute");
             S.Left(nls, 0f); S.Top(nls, _currentY);
             S.Width(nls, ContentW); S.Height(nls, ElemH);
-            S.Color(nls, Color.white); S.Font(nls);
+            S.Color(nls, Color.white); ApplyFont(nls);
             UIRuntime.LabelType.GetProperty("text").SetValue(nameLbl, label);
             UIRuntime.AddChild(UIRuntime.WrapVE(_contentPtr), nameLbl);
 
@@ -998,7 +999,7 @@ namespace CMS2026UITKFramework
             S.Left(hbs, 0f); S.Top(hbs, btnY);
             S.Width(hbs, ContentW); S.Height(hbs, BtnH);
             S.BgColor(hbs, new Color(0.12f, 0.18f, 0.28f, 1f));
-            S.Color(hbs, Color.white); S.Font(hbs);
+            S.Color(hbs, Color.white); ApplyFont(hbs);
             S.TextAlign(hbs, TextAnchor.MiddleLeft);
             S.Padding(hbs, 4f);
             UIRuntime.ButtonType.GetProperty("text")
@@ -1058,7 +1059,7 @@ namespace CMS2026UITKFramework
                 S.BgColor(obs, i == sel
                     ? new Color(0.20f, 0.35f, 0.55f, 1f)
                     : new Color(0.10f, 0.14f, 0.22f, 1f));
-                S.Color(obs, Color.white); S.Font(obs);
+                S.Color(obs, Color.white); ApplyFont(obs);
                 S.TextAlign(obs, TextAnchor.MiddleLeft);
                 S.Padding(obs, 4f);
                 UIRuntime.ButtonType.GetProperty("text").SetValue(optBtn, options[i]);
@@ -1125,7 +1126,7 @@ namespace CMS2026UITKFramework
             S.Width(s, w); S.Height(s, h);
             S.BgColor(s, bg);
             S.Color(s, Color.white);
-            S.Font(s);
+            ApplyFont(s);
             S.TextAlign(s, TextAnchor.MiddleCenter);
             S.Padding(s, 0f);
             UIRuntime.ButtonType.GetProperty("text").SetValue(btn, label);
@@ -1234,7 +1235,7 @@ namespace CMS2026UITKFramework
             S.Left(s, x); S.Top(s, y);
             S.Width(s, w); S.Height(s, h);
             S.BgColor(s, bg); S.Color(s, Color.white);
-            S.Font(s); S.TextAlign(s, TextAnchor.MiddleCenter); S.Padding(s, 0f);
+            ApplyFont(s); S.TextAlign(s, TextAnchor.MiddleCenter); S.Padding(s, 0f);
             UIRuntime.ButtonType.GetProperty("text").SetValue(btn, text);
             if (onClick != null)
             {
@@ -1259,7 +1260,7 @@ namespace CMS2026UITKFramework
             S.Position(s, "Absolute");
             S.Left(s, x); S.Top(s, y);
             S.Width(s, w); S.Height(s, h);
-            S.Color(s, color); S.Font(s);
+            S.Color(s, color); ApplyFont(s);
             UIRuntime.LabelType.GetProperty("text").SetValue(lbl, text);
             UIRuntime.AddChild(container, lbl);
             return new UILabelHandle(UIRuntime.GetPtr(lbl));
@@ -1326,6 +1327,35 @@ namespace CMS2026UITKFramework
                 focused.GetType().GetMethod("Blur")?.Invoke(focused, null);
             }
             catch (Exception ex) { FrameworkPlugin.Log.Warning($"[UIPanel] ClearFocus: {ex.Message}"); }
+        }
+
+        /// <summary>True while a text input (TextField) in this panel's document has keyboard focus. Use it to skip your hotkeys while the player is typing.</summary>
+        public bool IsTextInputFocused => _rootPtr != IntPtr.Zero && UIRuntime.IsTextInputFocusedIn(UIRuntime.WrapVE(_rootPtr));
+
+        // ── Default font (0.4.0) ───────────────────────────────────────────
+        private object _defaultFontDef;
+
+        /// <summary>Font for elements this panel creates from now on (Add…, rows, title if called before Build). Null = back to the framework default. Already created elements keep their font.</summary>
+        public UIPanel SetDefaultFont(Font font)
+        {
+            _defaultFontDef = UIRuntime.MakeFontDefinition(font);
+            if (_rootPtr != IntPtr.Zero)
+            {
+                var rs = UIRuntime.GetStyle(UIRuntime.WrapVE(_rootPtr));
+                if (_defaultFontDef != null) S.FontDef(rs, _defaultFontDef); else S.Font(rs);
+            }
+            return this;
+        }
+
+        /// <summary>Panel default font if set, otherwise the framework default (same as S.Font).</summary>
+        internal void ApplyFont(object style)
+        {
+            if (_defaultFontDef != null) S.FontDef(style, _defaultFontDef); else S.Font(style);
+        }
+
+        internal static void ApplyFont(UIPanel panel, object style)
+        {
+            if (panel != null) panel.ApplyFont(style); else S.Font(style);
         }
 
         // Called every frame by UIKitUpdater

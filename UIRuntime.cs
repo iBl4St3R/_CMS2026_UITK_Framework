@@ -70,8 +70,32 @@ namespace CMS2026UITKFramework
         internal static ConstructorInfo StyleTextAnchorCtor;
         internal static ConstructorInfo StyleFontStyleCtor;
 
+        // ── Layout / background (0.4.0) — resolved separately, never blocks init ──
+        internal static Type LengthType;
+        internal static Type LengthUnitType;
+        internal static ConstructorInfo LengthCtor;              // Length(float, LengthUnit)
+        internal static ConstructorInfo StyleLengthFromLengthCtor; // StyleLength(Length)
+        internal static Type FlexDirectionType;
+        internal static ConstructorInfo StyleFlexDirectionCtor;
+        internal static Type WrapType;
+        internal static ConstructorInfo StyleWrapCtor;
+        internal static Type BackgroundSizeType;
+        internal static Type BackgroundSizeTypeEnum;
+        internal static ConstructorInfo BackgroundSizeFromTypeCtor;   // BackgroundSize(BackgroundSizeType)
+        internal static ConstructorInfo BackgroundSizeFromLengthsCtor; // BackgroundSize(Length, Length)
+        internal static ConstructorInfo StyleBackgroundSizeCtor;
+        internal static Type BackgroundPositionType;
+        internal static Type BackgroundPositionKeywordType;
+        internal static ConstructorInfo BackgroundPositionCtor;       // BackgroundPosition(BackgroundPositionKeyword)
+        internal static ConstructorInfo StyleBackgroundPositionCtor;
+        internal static Type BackgroundRepeatType;
+        internal static Type RepeatType;
+        internal static ConstructorInfo BackgroundRepeatCtor;         // BackgroundRepeat(Repeat, Repeat)
+        internal static ConstructorInfo StyleBackgroundRepeatCtor;
+
         // ── Font ────────────────────────────────────────────────────────────
         internal static object DefaultFontDef;
+        private static readonly System.Collections.Generic.Dictionary<string, Font> _fontCache = new();
 
         // ── PanelSettings + UIDocument ──────────────────────────────────────
         internal static Type PanelSettingsType;
@@ -98,6 +122,7 @@ namespace CMS2026UITKFramework
                 ResolveTypes();
                 ResolveCtors();
                 SetupFont();
+                ResolveLayoutTypes();
 
                 IsAvailable = true;
                 return true;
@@ -173,6 +198,52 @@ namespace CMS2026UITKFramework
             StyleTextAnchorCtor = StyleTextAnchorType.GetConstructor(new[] { TextAnchorType });
             StyleScaleModeCtor = StyleScaleModeType.GetConstructor(new[] { ScaleModeType });
             StyleFontStyleCtor = StyleFontStyleType.GetConstructor(new[] { FontStyleType });
+        }
+
+        /// <summary>Flex, percent, margin and background-size types (0.4.0). Failure only disables those helpers, never the framework.</summary>
+        private static void ResolveLayoutTypes()
+        {
+            try
+            {
+                LengthType = UEAsm.GetType("UnityEngine.UIElements.Length");
+                LengthUnitType = UEAsm.GetType("UnityEngine.UIElements.LengthUnit");
+                LengthCtor = LengthType?.GetConstructor(new[] { typeof(float), LengthUnitType });
+                StyleLengthFromLengthCtor = LengthType != null ? StyleLengthType.GetConstructor(new[] { LengthType }) : null;
+
+                FlexDirectionType = UEAsm.GetType("UnityEngine.UIElements.FlexDirection");
+                if (FlexDirectionType != null) StyleFlexDirectionCtor = MakeStyleEnum(FlexDirectionType).GetConstructor(new[] { FlexDirectionType });
+                WrapType = UEAsm.GetType("UnityEngine.UIElements.Wrap");
+                if (WrapType != null) StyleWrapCtor = MakeStyleEnum(WrapType).GetConstructor(new[] { WrapType });
+
+                BackgroundSizeType = UEAsm.GetType("UnityEngine.UIElements.BackgroundSize");
+                BackgroundSizeTypeEnum = UEAsm.GetType("UnityEngine.UIElements.BackgroundSizeType");
+                if (BackgroundSizeType != null && BackgroundSizeTypeEnum != null)
+                {
+                    BackgroundSizeFromTypeCtor = BackgroundSizeType.GetConstructor(new[] { BackgroundSizeTypeEnum });
+                    if (LengthType != null) BackgroundSizeFromLengthsCtor = BackgroundSizeType.GetConstructor(new[] { LengthType, LengthType });
+                    StyleBackgroundSizeCtor = UEAsm.GetType("UnityEngine.UIElements.StyleBackgroundSize")?.GetConstructor(new[] { BackgroundSizeType });
+                }
+
+                BackgroundPositionType = UEAsm.GetType("UnityEngine.UIElements.BackgroundPosition");
+                BackgroundPositionKeywordType = UEAsm.GetType("UnityEngine.UIElements.BackgroundPositionKeyword");
+                if (BackgroundPositionType != null && BackgroundPositionKeywordType != null)
+                {
+                    BackgroundPositionCtor = BackgroundPositionType.GetConstructor(new[] { BackgroundPositionKeywordType });
+                    StyleBackgroundPositionCtor = UEAsm.GetType("UnityEngine.UIElements.StyleBackgroundPosition")?.GetConstructor(new[] { BackgroundPositionType });
+                }
+
+                BackgroundRepeatType = UEAsm.GetType("UnityEngine.UIElements.BackgroundRepeat");
+                RepeatType = UEAsm.GetType("UnityEngine.UIElements.Repeat");
+                if (BackgroundRepeatType != null && RepeatType != null)
+                {
+                    BackgroundRepeatCtor = BackgroundRepeatType.GetConstructor(new[] { RepeatType, RepeatType });
+                    StyleBackgroundRepeatCtor = UEAsm.GetType("UnityEngine.UIElements.StyleBackgroundRepeat")?.GetConstructor(new[] { BackgroundRepeatType });
+                }
+            }
+            catch (Exception ex)
+            {
+                FrameworkPlugin.Log.Warning($"[UIRuntime] Layout types unavailable (flex/percent/scale-mode helpers disabled): {ex.Message}");
+            }
         }
 
         private static void SetupFont()
@@ -310,6 +381,86 @@ namespace CMS2026UITKFramework
             {
                 FrameworkPlugin.Log.Error($"[UIRuntime] SetBackgroundRenderTexture: {ex.Message}");
             }
+        }
+
+        /// <summary>Sets a Sprite as the element background (Background.FromSprite). Unlike sprite.texture, only the sprite's rect is drawn, so atlas icons work.</summary>
+        public static void SetBackgroundSprite(object ve, Sprite sprite)
+        {
+            if (sprite == null) return;
+            try
+            {
+                var bgType = UEAsm.GetType("UnityEngine.UIElements.Background");
+                var sbgType = UEAsm.GetType("UnityEngine.UIElements.StyleBackground");
+                var fromSprite = bgType.GetMethod("FromSprite", BindingFlags.Public | BindingFlags.Static);
+                var il2Sprite = Activator.CreateInstance(typeof(Sprite), new object[] { sprite.Pointer });
+                var bgValue = fromSprite.Invoke(null, new object[] { il2Sprite });
+                var sbgValue = sbgType.GetConstructor(new[] { bgType }).Invoke(new object[] { bgValue });
+                IStyleType.GetProperty("backgroundImage").SetValue(GetStyle(ve), sbgValue);
+            }
+            catch (Exception ex)
+            {
+                FrameworkPlugin.Log.Error($"[UIRuntime] SetBackgroundSprite: {ex.Message}");
+            }
+        }
+
+        /// <summary>Finds a loaded font by name (exact, then case-insensitive), e.g. "Rubik-VariableFont_wght". Returns null when not found. Main thread only.</summary>
+        public static Font FindFont(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return null;
+            try
+            {
+                if (_fontCache.TryGetValue(name, out var cached) && cached != null) return cached;
+
+                var all = Resources.FindObjectsOfTypeAll(Il2CppInterop.Runtime.Il2CppType.Of<Font>());
+                Font exact = null, ci = null;
+                foreach (var o in all)
+                {
+                    if (o == null) continue;
+                    if (exact == null && o.name == name) exact = o.TryCast<Font>();
+                    else if (ci == null && string.Equals(o.name, name, StringComparison.OrdinalIgnoreCase)) ci = o.TryCast<Font>();
+                }
+                var found = exact ?? ci;
+                if (found != null) { _fontCache[name] = found; return found; }
+                FrameworkPlugin.Log.Warning($"[UIRuntime] FindFont: font '{name}' not found");
+            }
+            catch (Exception ex)
+            {
+                FrameworkPlugin.Log.Warning($"[UIRuntime] FindFont: {ex.Message}");
+            }
+            return null;
+        }
+
+        /// <summary>FontDefinition.FromFont(font) boxed for style setters; null when font is null or conversion fails.</summary>
+        internal static object MakeFontDefinition(Font font)
+        {
+            if (font == null) return null;
+            try
+            {
+                var il2Font = Activator.CreateInstance(typeof(Font), new object[] { font.Pointer });
+                return FontDefinitionType.GetMethod("FromFont").Invoke(null, new object[] { il2Font });
+            }
+            catch (Exception ex)
+            {
+                FrameworkPlugin.Log.Warning($"[UIRuntime] MakeFontDefinition: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>True when the focused element of the UI Toolkit panel that owns <paramref name="ve"/> is a text input (TextField and friends).</summary>
+        internal static bool IsTextInputFocusedIn(object ve)
+        {
+            if (ve == null) return false;
+            try
+            {
+                var panelObj = VisualElementType.GetProperty("panel")?.GetValue(ve);
+                var fc = panelObj?.GetType().GetProperty("focusController")?.GetValue(panelObj);
+                var focused = fc?.GetType().GetProperty("focusedElement")?.GetValue(fc);
+                if (focused == null) return false;
+                // Wrapper ma typ zadeklarowany (Focusable); prawdziwy typ bierzemy z IL2CPP. Przycisk po kliknięciu też trzyma fokus, więc liczymy tylko elementy tekstowe.
+                if (focused is Il2CppSystem.Object o) return (o.GetIl2CppType()?.Name ?? "").Contains("Text");
+                return false;
+            }
+            catch { return false; }
         }
     }
 }

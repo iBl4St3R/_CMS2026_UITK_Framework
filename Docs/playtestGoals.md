@@ -8,4 +8,6 @@
 - Goal działa: usuń go, wniosek do `Docs/Design/` albo `Docs/Research/`. Nie działa: poprawka z nowym goalem albo wpis w `Docs/BACKLOG.md`. Brak danych: zostaje.
 - Przed testem: zamknij grę, zbuduj w VS (DLL kopiuje się sam), uruchom grę.
 
-Następny numer: **G1**
+Następny numer: **G6**
+
+(brak otwartych goali; G1–G5 z 0.4.0 zaliczone 2026-11-21, wniosek w `Docs/History/log.md`)

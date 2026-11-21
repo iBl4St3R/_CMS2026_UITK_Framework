@@ -1,5 +1,5 @@
 # CMS2026 UITK Framework — Pro API
-Version 0.1.0 | For advanced modders
+Version 0.4.0 | For advanced modders
 
 ## Raw Pointer Access
 
@@ -63,7 +63,31 @@ S.BorderColor(style, Color.cyan);
 S.BorderWidth(style, 2f);
 S.BorderRadius(style, 8f);
 S.BgTint(style, Color.red);
-S.BgScaleMode(style, ScaleMode.ScaleToFit); // Unity 6: no-op, pending fix
+S.BgScaleMode(style, ScaleMode.ScaleToFit); // ScaleToFit = contain, ScaleAndCrop = cover, StretchToFill = fill (works since 0.4.0)
+```
+
+### Fonts, flex, margins and percent sizes (0.4.0)
+```csharp
+Font rubik = UIRuntime.FindFont("Rubik-VariableFont_wght"); // null when not loaded (warning in log)
+S.Font(style, rubik);                      // null font = same as S.Font(style)
+
+S.FlexDirection(style, row: true);         // false = column (Unity default)
+S.FlexWrap(style, true);
+S.FlexGrow(style, 1f);
+S.FlexShrink(style, 0f);
+S.JustifyContent(style, "SpaceBetween");   // FlexStart, Center, FlexEnd, SpaceBetween, SpaceAround (SpaceEvenly)
+S.AlignItems(style, "Center");             // FlexStart, Center, FlexEnd, Stretch (Auto)
+S.Margin(style, 4f);                       // or MarginLeft/Right/Top/Bottom
+S.WidthPercent(style, 50f);                // percent of parent
+S.HeightPercent(style, 100f);
+S.MinWidth(style, 80f); S.MaxWidth(style, 400f); S.MaxHeight(style, 300f);
+```
+Unknown strings for `JustifyContent` and `AlignItems` log a warning and change nothing. Note for reflection users: `S.Font` now has two overloads, so pass parameter types to `GetMethod("Font", new[] { typeof(object) })`.
+
+### Sprites as background (0.4.0)
+```csharp
+UIRuntime.SetBackgroundSprite(ve, sprite);  // Background.FromSprite: atlas icons work (sprite.texture would show the whole atlas)
+imgHandle.SetSprite(sprite);
 ```
 
 ## Rounded Panel Example

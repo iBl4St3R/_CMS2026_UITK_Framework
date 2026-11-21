@@ -1,4 +1,4 @@
-[ tu wpisz swoimi słowami, co robimy. do tego czasu agent niczego nie implementuje ]
+[potwierdzam wszystko, mozesz wszystko naraz zrobic. co do metody i innych rzeczy trzymamy stare kompatybilnosci by stare mody dzialaly jezeli chcemy cos dodac to dodajemy obok tego co juz dziala by nie wywalic innych modow.]
 
 ## Zlecenie od BlastCoreOS (agent `blastcoreos-df`, 2026-11-21)
 
@@ -15,15 +15,26 @@ Priorytet: F2, F3, F1, F4, F5. Po każdym kawałku REPL albo goal do sprawdzenia
 ### Plan (do akceptacji)
 
 - Pliki: `UIRuntime.cs` (typy `Background`, `FontDefinition`, `BackgroundSize`/`BackgroundPosition`/`BackgroundRepeat`, `Length` %), `UIElements.cs` (nowe `S.*`), `UIHandles.cs` (`SetSprite`, `SetScaleMode`), `UIPanelBuilder.cs` (`SetDefaultFont`, `IsTextInputFocused`), `ProAPI.md`/`BasicAPI.md`, `Docs/Release.md`, `Docs/playtestGoals.md`, `Docs/BACKLOG.md`.
-- Nazwy członków Unity 6 (IL2CPP) sprawdzam w `cms2027assembly` przed kodem.
+- Nazwy członków Unity 6 (IL2CPP) sprawdzone w interop DLL gry (`cms2027assembly` ma tylko Assembly-CSharp), narzędziem w scratchpadzie.
 - Po zakończeniu: odpowiedź do `blastcoreos-df` z listą sygnatur i wersją.
 
-### Pytania do użytkownika
+### Decyzje użytkownika (2026-11-21)
 
-1. Potwierdzasz zlecenie (wpisz je w pierwszej linii)?
-2. Wersja po zmianie: **0.4.0** (nowe API) czy 0.3.2?
-3. `UIPanel.SetDefaultFont` też robimy (opcjonalne w zleceniu)? BlastCoreOS woli tak (setki elementów przez AddLabel/AddButton); minimum to `S.Font(style, Font)` + `UIRuntime.FindFont`. BlastCoreOS popiera też 0.4.0.
+Wszystko naraz, wersja 0.4.0, z `SetDefaultFont`. Stare zachowanie zostaje, nowe rzeczy obok.
 
 ## Wynik
 
-(pusto)
+Pliki:
+- `UIRuntime.cs`: typy Length/Flex/Wrap/Background* w osobnym `ResolveLayoutTypes` (nie blokuje startu), `SetBackgroundSprite`, `FindFont` (cache), wewn. `MakeFontDefinition`, `IsTextInputFocusedIn`.
+- `UIElements.cs`: `BgScaleMode` działa; nowe `S.Font(s, Font)`, flex, marginesy, procenty, min/max.
+- `UIHandles.cs`: `UIImageHandle.SetSprite`.
+- `UIPanelBuilder.cs`: `IsTextInputFocused`, `SetDefaultFont`, wewn. `ApplyFont`; stare `S.Font(x)` → `ApplyFont(x)` (bez fontu panelu to samo co wcześniej).
+- `UIRowBuilder.cs`: `S.Font(x)` → `UIPanel.ApplyFont(_panel, x)`.
+- `FrameworkPlugin.cs`: wersja 0.4.0 (`MelonInfo` + `Version`).
+- `README.md`, `BasicAPI.md`, `ProAPI.md`: wersja 0.4.0, nowe API, usunięte ograniczenie SetScaleMode.
+- `Samples/try_api040.cs`: skrypt REPL testu G1–G5 (sprawdzony kompilacją względem nowej DLL).
+- `Docs/Release.md`, `Docs/playtestGoals.md`, `Docs/BACKLOG.md`.
+
+Publiczne API: 23 nowe członki, 0 usuniętych/zmienionych (diff DLL). Zmiana zachowania tylko `BgScaleMode`/`SetScaleMode` (nikt z `contract.md` nie woła). Lista w `Docs/Release.md`.
+
+Goale: G1–G5. `_build_check.sh`: OK.

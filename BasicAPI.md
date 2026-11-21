@@ -1,5 +1,5 @@
 ﻿# CMS2026 UITK Framework — Basic API
-Version 0.2.3 | Author: Blaster
+Version 0.4.0 | Author: Blaster
 
 ## Setup
 
@@ -45,6 +45,10 @@ panel.ScrollToBottom();
 panel.SetSortOrder(int);
 panel.SetUpdateCallback(dt => { });
 panel.GetPanelRawPtr();
+
+// 0.4.0
+panel.SetDefaultFont(UIRuntime.FindFont("Rubik-VariableFont_wght")); // font for elements created after this call (call before Build to include the title)
+bool typing = panel.IsTextInputFocused;   // true while a TextField in this panel has focus: skip your hotkeys
 ```
 
 ## Elements
@@ -143,6 +147,8 @@ img.SetTexture(tex);
 img.SetSize(200f, 100f);
 img.SetTint(new Color(1f, 0.5f, 0.5f, 1f));
 img.SetVisible(bool);
+img.SetSprite(sprite);                   // 0.4.0: Sprite, e.g. a game icon from an atlas (only the sprite rect is drawn)
+img.SetScaleMode(ScaleMode.ScaleToFit);  // 0.4.0 works: ScaleToFit = contain, ScaleAndCrop = cover, StretchToFill = fill
 ```
 
 ### Layout Helpers
@@ -208,5 +214,5 @@ imgConvType.GetMethod("LoadImage", new Type[] { typeof(Texture2D), il2Bytes.GetT
 
 ## Known Limitations
 
-- `SetScaleMode` on Image/Label has no effect — Unity 6 changed the API (`backgroundSize` struct required, not yet implemented).
-- `SetSize` on Label/Button does not reflow elements below it (absolute layout).
+- `SetSize` on Label/Button does not reflow elements below it (absolute layout).- The default font has no emoji glyphs; emoji render as empty boxes.
+- Fonts: `UIRuntime.FindFont(name)` only finds fonts the game has loaded (Unity `Font` objects). In the 2027 Demo these include LegacyRuntime, LiberationSans, Rubik-VariableFont_wght, NotoSansCJKjp-Regular and VeraMono.

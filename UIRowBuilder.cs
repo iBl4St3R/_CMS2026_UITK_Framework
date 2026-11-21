@@ -51,7 +51,7 @@ namespace CMS2026UITKFramework
                 S.Position(sls, "Absolute");
                 S.Left(sls, _currentX); S.Top(sls, 0f);
                 S.Width(sls, lblW); S.Height(sls, _height);
-                S.Color(sls, Color.white); S.Font(sls);
+                S.Color(sls, Color.white); UIPanel.ApplyFont(_panel, sls);
                 S.TextAlign(sls, TextAnchor.MiddleLeft);
                 UIRuntime.LabelType.GetProperty("text").SetValue(sLbl, label);
                 UIRuntime.AddChild(UIRuntime.WrapVE(_containerPtr), sLbl);
@@ -67,7 +67,7 @@ namespace CMS2026UITKFramework
             S.Width(hbs, width); S.Height(hbs, _height);
             S.BgColor(hbs, new Color(0.12f, 0.18f, 0.28f, 1f));
             S.Color(hbs, Color.white);
-            S.Font(hbs);
+            UIPanel.ApplyFont(_panel, hbs);
             S.TextAlign(hbs, TextAnchor.MiddleLeft);
             S.Padding(hbs, 4f);
             UIRuntime.ButtonType.GetProperty("text")
@@ -133,7 +133,7 @@ namespace CMS2026UITKFramework
                     ? new Color(0.20f, 0.35f, 0.55f, 1f)
                     : new Color(0.10f, 0.14f, 0.22f, 1f));
                 S.Color(obs, Color.white);
-                S.Font(obs);
+                UIPanel.ApplyFont(_panel, obs);
                 S.TextAlign(obs, TextAnchor.MiddleLeft);
                 S.Padding(obs, 4f);
                 UIRuntime.ButtonType.GetProperty("text").SetValue(optBtn, options[i]);
@@ -184,7 +184,7 @@ namespace CMS2026UITKFramework
             S.Left(s, _currentX); S.Top(s, 0f);
             S.Width(s, width); S.Height(s, _height);
             S.Color(s, color ?? Color.white);
-            S.Font(s);
+            UIPanel.ApplyFont(_panel, s);
             UIRuntime.LabelType.GetProperty("text").SetValue(lbl, text);
             UIRuntime.AddChild(UIRuntime.WrapVE(_containerPtr), lbl);
 
@@ -208,7 +208,7 @@ namespace CMS2026UITKFramework
             S.Width(s, width); S.Height(s, _height);
             S.BgColor(s, bg);
             S.Color(s, Color.white);
-            S.Font(s);
+            UIPanel.ApplyFont(_panel, s);
             S.TextAlign(s, TextAnchor.MiddleCenter);
             S.Padding(s, 0f);
             UIRuntime.ButtonType.GetProperty("text").SetValue(btn, label);
@@ -242,7 +242,7 @@ namespace CMS2026UITKFramework
             S.Width(s, width); S.Height(s, _height);
             S.BgColor(s, bg);
             S.Color(s, Color.white);
-            S.Font(s);
+            UIPanel.ApplyFont(_panel, s);
             S.TextAlign(s, TextAnchor.MiddleCenter);
             S.Padding(s, 0f);
             UIRuntime.ButtonType.GetProperty("text").SetValue(btn, initial ? "ON" : "OFF");

@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.Playables;
 
 [assembly: MelonInfo(typeof(CMS2026UITKFramework.FrameworkPlugin),
-    "_CMS2026_UITK_Framework", "0.3.1", "iBlaster")]
+    "_CMS2026_UITK_Framework", "0.4.0", "iBlaster")]
 [assembly: MelonGame("Red Dot Games", "Car Mechanic Simulator 2027 Demo")]
 [assembly: MelonGame("Red Dot Games", "Car Mechanic Simulator 2027")]
 [assembly: MelonPriority(-100)]  // wysoki priorytet = ładuje się wcześniej
@@ -27,7 +27,7 @@ namespace CMS2026UITKFramework
 {
     public class FrameworkPlugin : MelonMod
     {
-        public const string Version = "0.3.1";
+        public const string Version = "0.4.0";
         internal static MelonLogger.Instance Log => Melon<FrameworkPlugin>.Logger;
 
         private static GameObject _runtimeHost;

@@ -1,6 +1,6 @@
 ﻿# _CMS2026_UITK_Framework
 
-![Version](https://img.shields.io/badge/version-0.2.3-blue)
+![Version](https://img.shields.io/badge/version-0.4.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![MelonLoader](https://img.shields.io/badge/MelonLoader-v0.7.2+-red)
 ![Game](https://img.shields.io/badge/game-CMS2026-orange)
@@ -83,7 +83,6 @@ Detailed documentation is available for both beginners and advanced users:
 
 ## ⚠️ Known Limitations
 * Framework UI renders below the game's native Canvas during scene loading screens due to Unity architecture.
-* `SetScaleMode` on images is currently pending due to Unity 6 API changes.
 * `SetSize` on Labels/Buttons uses absolute positioning and does not trigger element reflow.
 
 ---

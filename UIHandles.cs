@@ -556,6 +556,13 @@ namespace CMS2026UITKFramework
             UIRuntime.SetBackgroundImage(ve, tex);
         }
 
+        /// <summary>Shows a Sprite (e.g. a game icon from an atlas); only the sprite's rect is drawn.</summary>
+        public void SetSprite(Sprite sprite)
+        {
+            if (_ptr == IntPtr.Zero) return;
+            UIRuntime.SetBackgroundSprite(UIRuntime.WrapVE(_ptr), sprite);
+        }
+
         public void SetSize(float width, float height)
         {
             if (_ptr == IntPtr.Zero) return;

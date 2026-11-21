@@ -175,11 +175,143 @@ namespace CMS2026UITKFramework
 
         public static void Scale(object s, float x, float y) => SetProp(s, "scale", UIRuntime.StyleScaleCtor.Invoke(new object[] { UIRuntime.ScaleCtor.Invoke(new object[] { new Vector3(x, y, 1f) }) }));
 
+        /// <summary>Unity 6: maps ScaleMode to backgroundSize + backgroundPositionX/Y (center) + backgroundRepeat (no-repeat). ScaleToFit = contain, ScaleAndCrop = cover, StretchToFill = 100% x 100%.</summary>
         public static void BgScaleMode(object s, UnityEngine.ScaleMode mode)
         {
-            // Unity 6 używa backgroundSize zamiast unityBackgroundScaleMode
-            // ScaleToFit/ScaleAndCrop = "cover", StretchToFill = "contain" / auto
-            // Na razie zostawiamy jako no-op z logiem — do zbadania
+            try
+            {
+                if (UIRuntime.StyleBackgroundSizeCtor == null || UIRuntime.BackgroundSizeFromTypeCtor == null) { FrameworkPlugin.Log.Warning("[S] BgScaleMode: backgroundSize types not available"); return; }
+
+                object size;
+                if (mode == UnityEngine.ScaleMode.StretchToFill)
+                {
+                    var full = PercentLength(100f);
+                    if (full == null || UIRuntime.BackgroundSizeFromLengthsCtor == null) return;
+                    size = UIRuntime.BackgroundSizeFromLengthsCtor.Invoke(new[] { full, full });
+                }
+                else
+                {
+                    string sizeType = mode == UnityEngine.ScaleMode.ScaleAndCrop ? "Cover" : "Contain";
+                    size = UIRuntime.BackgroundSizeFromTypeCtor.Invoke(new[] { Enum.Parse(UIRuntime.BackgroundSizeTypeEnum, sizeType) });
+                }
+                SetProp(s, "backgroundSize", UIRuntime.StyleBackgroundSizeCtor.Invoke(new[] { size }));
+
+                if (UIRuntime.BackgroundPositionCtor != null && UIRuntime.StyleBackgroundPositionCtor != null)
+                {
+                    var center = UIRuntime.BackgroundPositionCtor.Invoke(new[] { Enum.Parse(UIRuntime.BackgroundPositionKeywordType, "Center") });
+                    SetProp(s, "backgroundPositionX", UIRuntime.StyleBackgroundPositionCtor.Invoke(new[] { center }));
+                    SetProp(s, "backgroundPositionY", UIRuntime.StyleBackgroundPositionCtor.Invoke(new[] { center }));
+                }
+
+                if (UIRuntime.BackgroundRepeatCtor != null && UIRuntime.StyleBackgroundRepeatCtor != null)
+                {
+                    var noRep = Enum.Parse(UIRuntime.RepeatType, "NoRepeat");
+                    var rep = UIRuntime.BackgroundRepeatCtor.Invoke(new[] { noRep, noRep });
+                    SetProp(s, "backgroundRepeat", UIRuntime.StyleBackgroundRepeatCtor.Invoke(new[] { rep }));
+                }
+            }
+            catch (Exception ex) { FrameworkPlugin.Log.Warning($"[S] BgScaleMode failed: {ex.Message}"); }
+        }
+
+        // ── 0.4.0: font, flex, margins, percent sizes ─────────────────────────
+
+        /// <summary>Applies the given font (e.g. from UIRuntime.FindFont). Null font = same as S.Font(s) (default LegacyRuntime).</summary>
+        public static void Font(object s, UnityEngine.Font font)
+        {
+            var def = UIRuntime.MakeFontDefinition(font);
+            if (def == null) { Font(s); return; }
+            SetProp(s, "unityFontDefinition", UIRuntime.StyleFontDefCtor.Invoke(new object[] { def }));
+        }
+
+        /// <summary>Applies an already built FontDefinition (internal: panel default font cache).</summary>
+        internal static void FontDef(object s, object fontDefinition)
+        {
+            if (fontDefinition == null) { Font(s); return; }
+            SetProp(s, "unityFontDefinition", UIRuntime.StyleFontDefCtor.Invoke(new object[] { fontDefinition }));
+        }
+
+        /// <summary>row = true: children laid out left to right; false: top to bottom (Unity default).</summary>
+        public static void FlexDirection(object s, bool row)
+        {
+            if (UIRuntime.StyleFlexDirectionCtor == null) return;
+            SetProp(s, "flexDirection", UIRuntime.StyleFlexDirectionCtor.Invoke(new[] { Enum.Parse(UIRuntime.FlexDirectionType, row ? "Row" : "Column") }));
+        }
+
+        public static void FlexGrow(object s, float v) => SetProp(s, "flexGrow", Sf(v));
+        public static void FlexShrink(object s, float v) => SetProp(s, "flexShrink", Sf(v));
+
+        public static void FlexWrap(object s, bool wrap)
+        {
+            if (UIRuntime.StyleWrapCtor == null) return;
+            SetProp(s, "flexWrap", UIRuntime.StyleWrapCtor.Invoke(new[] { Enum.Parse(UIRuntime.WrapType, wrap ? "Wrap" : "NoWrap") }));
+        }
+
+        /// <summary>"FlexStart", "Center", "FlexEnd", "SpaceBetween", "SpaceAround" (also "SpaceEvenly"). Case-insensitive; unknown value = warning, no change.</summary>
+        public static void JustifyContent(object s, string v)
+        {
+            var e = ParseEnum(UIRuntime.JustifyType, v, "JustifyContent");
+            if (e != null) SetProp(s, "justifyContent", UIRuntime.StyleJustifyCtor.Invoke(new[] { e }));
+        }
+
+        /// <summary>"FlexStart", "Center", "FlexEnd", "Stretch" (also "Auto"). Case-insensitive; unknown value = warning, no change.</summary>
+        public static void AlignItems(object s, string v)
+        {
+            var e = ParseEnum(UIRuntime.AlignType, v, "AlignItems");
+            if (e != null) SetProp(s, "alignItems", UIRuntime.StyleAlignCtor.Invoke(new[] { e }));
+        }
+
+        public static void Margin(object s, float v)
+        {
+            SetProp(s, "marginLeft", Sl(v));
+            SetProp(s, "marginRight", Sl(v));
+            SetProp(s, "marginTop", Sl(v));
+            SetProp(s, "marginBottom", Sl(v));
+        }
+
+        public static void MarginLeft(object s, float v) => SetProp(s, "marginLeft", Sl(v));
+        public static void MarginRight(object s, float v) => SetProp(s, "marginRight", Sl(v));
+        public static void MarginTop(object s, float v) => SetProp(s, "marginTop", Sl(v));
+        public static void MarginBottom(object s, float v) => SetProp(s, "marginBottom", Sl(v));
+
+        /// <summary>Width as percent of the parent (0–100).</summary>
+        public static void WidthPercent(object s, float percent)
+        {
+            var sl = PercentStyleLength(percent);
+            if (sl != null) SetProp(s, "width", sl);
+        }
+
+        /// <summary>Height as percent of the parent (0–100).</summary>
+        public static void HeightPercent(object s, float percent)
+        {
+            var sl = PercentStyleLength(percent);
+            if (sl != null) SetProp(s, "height", sl);
+        }
+
+        public static void MinWidth(object s, float v) => SetProp(s, "minWidth", Sl(v));
+        public static void MaxWidth(object s, float v) => SetProp(s, "maxWidth", Sl(v));
+        public static void MaxHeight(object s, float v) => SetProp(s, "maxHeight", Sl(v));
+
+        static object PercentLength(float percent)
+        {
+            if (UIRuntime.LengthCtor == null) return null;
+            return UIRuntime.LengthCtor.Invoke(new[] { (object)percent, Enum.Parse(UIRuntime.LengthUnitType, "Percent") });
+        }
+
+        static object PercentStyleLength(float percent)
+        {
+            var len = PercentLength(percent);
+            if (len == null || UIRuntime.StyleLengthFromLengthCtor == null) { FrameworkPlugin.Log.Warning("[S] Percent length not available"); return null; }
+            return UIRuntime.StyleLengthFromLengthCtor.Invoke(new[] { len });
+        }
+
+        static object ParseEnum(Type enumType, string v, string caller)
+        {
+            if (enumType != null && !string.IsNullOrEmpty(v))
+            {
+                try { return Enum.Parse(enumType, v, true); } catch { }
+            }
+            FrameworkPlugin.Log.Warning($"[S] {caller}: unknown value '{v}'");
+            return null;
         }
 
     }
