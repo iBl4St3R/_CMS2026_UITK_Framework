@@ -4,7 +4,7 @@
 
 ## Historia wydań
 
-**0.4.0** (gotowe do wydania 2026-11-23, kod z 2026-11-21; zlecenie BlastCoreOS F1–F5; Nexus i GitHub release: do zrobienia przez użytkownika). Tylko dodawanie API. Porównanie publicznego API starej (`Mods/`, 0.3.1) i nowej DLL: 0 usuniętych lub zmienionych, 23 nowe.
+**0.4.0** (wydawane przez użytkownika 2026-11-23: sam pakuje i wysyła na Nexusa; kod z 2026-11-21; zlecenie BlastCoreOS F1–F5). Stan w chwili wydania: niezacommitowane zmiany w repo (UIPrompt.cs, dokumentacja, nowy `CHANGELOG.md`, `Docs/NexusOpis.md`); G6 (ikony promptów) jeszcze bez potwierdzenia w grze: przy następnej sesji sprawdzić log i zapytać o wynik. Tylko dodawanie API. Porównanie publicznego API starej (`Mods/`, 0.3.1) i nowej DLL: 0 usuniętych lub zmienionych, 23 nowe.
 
 - Nowe: `UIRuntime.SetBackgroundSprite`, `UIRuntime.FindFont`, `UIImageHandle.SetSprite`, `UIPanel.SetDefaultFont`, `UIPanel.IsTextInputFocused`, `S.Font(style, Font)`, `S.FlexDirection/FlexGrow/FlexShrink/FlexWrap/JustifyContent/AlignItems`, `S.Margin` (+ Left/Right/Top/Bottom), `S.WidthPercent/HeightPercent`, `S.MinWidth/MaxWidth/MaxHeight`.
 - **Zmiana zachowania:** `S.BgScaleMode` i `SetScaleMode` (obraz, etykieta) wcześniej nic nie robiły, teraz ustawiają `backgroundSize`, `backgroundPositionX/Y` (center) i `backgroundRepeat` (no-repeat). Wpływ: grep 2026-11-21: nikt ich nie wołał. Grep 2026-11-23: woła tylko BlastCoreOS (`S.BgScaleMode` 20×), pisany już pod nowe zachowanie, więc wpływ zero. Obce mody, które wołały to "na zapas", zobaczą teraz contain/cover zamiast domyślnego rozciągania.

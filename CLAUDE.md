@@ -70,3 +70,5 @@ Biblioteka UI dla modów **Car Mechanic Simulator 2027** (Demo; Unity 6000.3, **
 ## Stan projektu
 
 Wersja **0.3.1**, działa w 2027 (log 2026-11-20: ładuje się, panele GlideRail 0.2.0 działają). Port na 2027 (`MelonGame` 2027, wersja 0.3.0 → 0.3.1) zacommitowany w `e78a32a` (2026-11-21); log z 2026-11-21 potwierdza `v0.3.1` na 2027 Demo. Znane ograniczenia i pomysły: `Docs/BACKLOG.md`.
+
+**2026-11-23: wydanie 0.4.0** (API dla BlastCoreOS + poprawka ikon promptów). Szczegóły i otwarte sprawy: `Docs/Release.md` (wpis 0.4.0), goal G6 w `Docs/playtestGoals.md`. Pełny changelog: `CHANGELOG.md`; opis Nexusa (BBCode): `Docs/NexusOpis.md`. Paczka = DLL + folder `_CMS2026_UITK_Framework/resources` z ikonami.
