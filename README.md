@@ -3,11 +3,11 @@
 ![Version](https://img.shields.io/badge/version-0.4.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![MelonLoader](https://img.shields.io/badge/MelonLoader-v0.7.2+-red)
-![Game](https://img.shields.io/badge/game-CMS2026-orange)
+![Game](https://img.shields.io/badge/game-CMS2027-orange)
 
 > ⚠️ **THIS IS NOT A STANDALONE GAME MOD.** It is a developer tool and a library required by other mods to display their user interfaces. Only install this if another mod requires it or if you are a mod developer.
 
-A UI framework for **Car Mechanic Simulator 2026** mods.  
+A UI framework for **Car Mechanic Simulator 2027** mods (the name CMS2026 in files and namespaces stays for compatibility).  
 Interfaces with Unity 6's UI Toolkit via MelonLoader and IL2CPP, giving mod developers a clean, fluent API to build in-game panels.
 
 ---
@@ -18,8 +18,8 @@ If you want to see the framework in action or learn how to implement specific fe
 ---
 
 ## 🛠 Installation
-1. Copy `_CMS2026_UITK_Framework.dll` into your `Mods/` folder.
-2. The framework loads automatically with `MelonPriority(-100)` — ensuring it initializes before other mods.
+1. Copy `_CMS2026_UITK_Framework.dll` and the `_CMS2026_UITK_Framework` folder (prompt icons in `resources/`) into your `Mods/` folder.
+2. The framework loads automatically with `MelonPriority(-100)`, so it initializes before other mods.
 
 ---
 
@@ -76,14 +76,31 @@ Panel capabilities:
 
 ## 📚 Documentation
 Detailed documentation is available for both beginners and advanced users:
-* 📖 [Basic API Documentation](https://github.com/iBl4St3R/_CMS2026_UITK_Framework/blob/main/BasicAPI.md) – Recommended for most modders. Covers elements, callbacks, and basic panel setup.
-* 🛡️ [Pro API Documentation](https://github.com/iBl4St3R/_CMS2026_UITK_Framework/blob/main/ProAPI.md) – For advanced usage, including raw pointers, S{} styles, and custom Visual Elements.
+* 📖 [Basic API Documentation](https://github.com/iBl4St3R/_CMS2026_UITK_Framework/blob/main/BasicAPI.md): Recommended for most modders. Covers elements, callbacks, and basic panel setup.
+* 🛡️ [Pro API Documentation](https://github.com/iBl4St3R/_CMS2026_UITK_Framework/blob/main/ProAPI.md): For advanced usage, including raw pointers, S{} styles, and custom Visual Elements.
+
+---
+
+## 📝 Changelog
+
+**0.4.0**
+Only new API was added. Nothing was removed or renamed, so mods built for 0.3.1 keep working.
+* Sprites as backgrounds: `UIRuntime.SetBackgroundSprite(ve, sprite)` and `UIImageHandle.SetSprite(sprite)`. Only the sprite rect is drawn, so icons from game atlases work.
+* Fonts: `UIRuntime.FindFont(name)`, new overload `S.Font(style, Font)` and `UIPanel.SetDefaultFont(font)` for elements added after the call. `S.Font(style)` works as before.
+* Layout helpers in `S`: `FlexDirection`, `FlexGrow`, `FlexShrink`, `FlexWrap`, `JustifyContent`, `AlignItems`, `Margin` (plus Left/Right/Top/Bottom), `WidthPercent`, `HeightPercent`, `MinWidth`, `MaxWidth`, `MaxHeight`.
+* `UIPanel.IsTextInputFocused` tells you when a text field in the panel has focus, so your hotkeys can ignore typing.
+* Fixed: `S.BgScaleMode` and `SetScaleMode` did nothing before. They now work (ScaleToFit = contain, ScaleAndCrop = cover, StretchToFill = fill). If your mod called them, check that your images still look right.
+* Fixed: prompt icons (info, warning, error) turned into plain colored circles after loading a save. Icon textures are now kept across scene changes.
+* Reflection users: `S.Font` now has two overloads, so look it up with explicit parameter types.
+
+Full history of all versions: [CHANGELOG.md](https://github.com/iBl4St3R/_CMS2026_UITK_Framework/blob/main/CHANGELOG.md).
 
 ---
 
 ## ⚠️ Known Limitations
 * Framework UI renders below the game's native Canvas during scene loading screens due to Unity architecture.
 * `SetSize` on Labels/Buttons uses absolute positioning and does not trigger element reflow.
+* The default font has no emoji glyphs, so emoji render as empty boxes.
 
 ---
 

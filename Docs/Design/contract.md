@@ -1,6 +1,6 @@
 # Kontrakt publicznego API: kto czego używa
 
-> Stan 2026-11-20, z grepa po repo modów użytkownika. Obce mody z Nexusa mogą używać więcej, dlatego zasada z `CLAUDE.md`: **żadnych zmian sygnatur publicznych**. Ta lista mówi, co na pewno zepsuje mody użytkownika. Odświeżaj grepem przed każdą zmianą API.
+> Stan 2026-11-20 (BlastCoreOS i API 0.4.0: 2026-11-23), z grepa po repo modów użytkownika. Obce mody z Nexusa mogą używać więcej, dlatego zasada z `CLAUDE.md`: **żadnych zmian sygnatur publicznych**. Ta lista mówi, co na pewno zepsuje mody użytkownika. Odświeżaj grepem przed każdą zmianą API.
 
 ## Użycie w modach użytkownika
 
@@ -25,6 +25,12 @@
 | `CursorManager.OnCursorShow/OnCursorHide` | | ✔ | | ✔ | ✔ |
 | `UIPrompt.Show` | | | | | ✔ |
 | `UIShortcutBar.Add/Remove/Show/Hide` | | | | | ✔ |
+| **0.4.0:** `UIRuntime.SetBackgroundSprite`, `UIRuntime.FindFont` | | | | | ✔ |
+| **0.4.0:** `UIPanel.SetDefaultFont`, `S.Font(style, Font)` | | | | | ✔ |
+| **0.4.0:** `S.BgScaleMode` (działa dopiero od 0.4.0) | | | | | ✔ |
+| **0.4.0:** `S.FlexDirection/FlexGrow/JustifyContent/AlignItems`, `S.Margin/MarginLeft/MarginRight`, `S.HeightPercent` | | | | | ✔ |
+
+**BlastCoreOS wymaga frameworka >= 0.4.0.** Z API 0.4.0 żaden mod użytkownika jeszcze nie używa: `UIImageHandle.SetSprite`, `UIPanel.IsTextInputFocused` (kandydat dla GlideRail, BACKLOG pkt 13), `S.FlexShrink/FlexWrap/MarginTop/MarginBottom/WidthPercent/MinWidth/MaxWidth/MaxHeight`.
 
 Refleksja po nazwie (bez twardej referencji): przykłady w `BasicAPI.md` (`GetType("CMS2026UITKFramework.FrameworkAPI")`), więc **pełne nazwy typów też są kontraktem**.
 

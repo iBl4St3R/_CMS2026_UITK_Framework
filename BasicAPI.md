@@ -214,5 +214,6 @@ imgConvType.GetMethod("LoadImage", new Type[] { typeof(Texture2D), il2Bytes.GetT
 
 ## Known Limitations
 
-- `SetSize` on Label/Button does not reflow elements below it (absolute layout).- The default font has no emoji glyphs; emoji render as empty boxes.
+- `SetSize` on Label/Button does not reflow elements below it (absolute layout).
+- The default font has no emoji glyphs; emoji render as empty boxes.
 - Fonts: `UIRuntime.FindFont(name)` only finds fonts the game has loaded (Unity `Font` objects). In the 2027 Demo these include LegacyRuntime, LiberationSans, Rubik-VariableFont_wght, NotoSansCJKjp-Regular and VeraMono.

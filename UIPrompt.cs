@@ -148,7 +148,11 @@ namespace CMS2026UITKFramework
         public static Texture2D LoadResourceTexture(string fileName)
         {
             if (string.IsNullOrEmpty(fileName)) return null;
-            if (_texCache.TryGetValue(fileName, out var cached)) return cached;
+            if (_texCache.TryGetValue(fileName, out var cached))
+            {
+                if (cached != null) return cached;   // Unity null = tekstura zniszczona (np. UnloadUnusedAssets po zmianie sceny)
+                _texCache.Remove(fileName);
+            }
 
             try
             {
@@ -171,8 +175,9 @@ namespace CMS2026UITKFramework
                 if (loadImg == null) return null;
 
                 bool ok = (bool)loadImg.Invoke(null, new object[] { tex, il2Bytes });
-                if (!ok) return null;
+                if (!ok) { FrameworkPlugin.Log.Warning($"[UIPrompt] LoadImage failed: {path}"); return null; }
 
+                tex.hideFlags = HideFlags.HideAndDontSave;   // nie sprzątać przy zmianie sceny
                 _texCache[fileName] = tex;
                 return tex;
             }

@@ -8,6 +8,8 @@
 - Goal działa: usuń go, wniosek do `Docs/Design/` albo `Docs/Research/`. Nie działa: poprawka z nowym goalem albo wpis w `Docs/BACKLOG.md`. Brak danych: zostaje.
 - Przed testem: zamknij grę, zbuduj w VS (DLL kopiuje się sam), uruchom grę.
 
-Następny numer: **G6**
+Następny numer: **G7**
 
-(brak otwartych goali; G1–G5 z 0.4.0 zaliczone 2026-11-21, wniosek w `Docs/History/log.md`)
+G1–G5 z 0.4.0 zaliczone 2026-11-21 (wniosek w `Docs/History/log.md`).
+
+- **G6.** Wczytaj zapis (zmiana sceny), potem wywołaj hint Info lub Warning (np. akcja w BlastCoreOS albo ostrzeżenie konsoli). Ikona ma być konturem „i” lub trójkątem, nie pełnym kółkiem; w logu brak `[UIPrompt]` ostrzeżeń. UA:

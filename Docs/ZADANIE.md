@@ -1,40 +1,29 @@
-[potwierdzam wszystko, mozesz wszystko naraz zrobic. co do metody i innych rzeczy trzymamy stare kompatybilnosci by stare mody dzialaly jezeli chcemy cos dodac to dodajemy obok tego co juz dziala by nie wywalic innych modow.]
+[wykonaj wszystkie poprawki do wersji 0.4.0 blast core to byl mod nad ktorym skonczylem pracowac doslownie 5 minut temu teraz pora na aktualizacje frameworka.]
 
-## Zlecenie od BlastCoreOS (agent `blastcoreos-df`, 2026-11-21)
+## Zadanie (2026-11-23): domknięcie wydania 0.4.0
 
-Źródło: wiadomość od agenta BlastCoreOS (overhaul UI, `C:\Users\usmat\source\repos\BlastCoreOS\Docs\Design\ui.md` sekcja 8). **Czeka na potwierdzenie użytkownika w pierwszej linii.** Tylko dodawanie API, 100% wstecznie zgodne (BlastCoreOS ma twardą referencję do DLL).
-
-Priorytet: F2, F3, F1, F4, F5. Po każdym kawałku REPL albo goal do sprawdzenia w grze.
-
-- **F2. Sprite jako tło:** `UIRuntime.SetBackgroundSprite(object ve, Sprite sprite)` (`Background.FromSprite`) + `UIImageHandle.SetSprite(Sprite sprite)`. Ikony z atlasów gry (`sprite.texture` dałoby cały atlas).
-- **F3. Wybór fontu:** przeciążenie `S.Font(object style, Font font)` (`FontDefinition.FromFont`) + `UIRuntime.FindFont(string name)` (po `name` w `Resources.FindObjectsOfTypeAll<Font>()`, null gdy brak) + opcjonalnie `UIPanel.SetDefaultFont(Font)` dla nowych elementów. Cel: `Rubik-VariableFont_wght`. `S.Font(style)` bez zmian.
-- **F1. Naprawa `S.BgScaleMode` / `UIImageHandle.SetScaleMode`** (BACKLOG pkt 2): `backgroundSize` + `backgroundPositionX/Y` center + `backgroundRepeat` no-repeat przez refleksję. Tryby: ScaleToFit (contain), ScaleAndCrop (cover), StretchToFill. Sygnatury bez zmian. Zmiana zachowania (dziś nie działa): grep 2026-11-21: żaden mod z `contract.md` nie woła `SetScaleMode`/`BgScaleMode`, wpływ zerowy; opisać w `Release.md`.
-- **F4. Flex i procenty w `S`:** `FlexDirection(style, bool row)`, `FlexGrow`, `FlexShrink`, `FlexWrap(style, bool)`, `JustifyContent(style, string)` (FlexStart/Center/FlexEnd/SpaceBetween/SpaceAround), `AlignItems(style, string)` (FlexStart/Center/FlexEnd/Stretch), `Margin` + `MarginLeft/Right/Top/Bottom`, `WidthPercent`, `HeightPercent`, `MinWidth`, `MaxWidth`, `MaxHeight`.
-- **F5. `public bool UIPanel.IsTextInputFocused`** (BACKLOG pkt 6; wzór: refleksja w GlideRail, `focusController.focusedElement` + nazwa typu IL2CPP).
-
-### Plan (do akceptacji)
-
-- Pliki: `UIRuntime.cs` (typy `Background`, `FontDefinition`, `BackgroundSize`/`BackgroundPosition`/`BackgroundRepeat`, `Length` %), `UIElements.cs` (nowe `S.*`), `UIHandles.cs` (`SetSprite`, `SetScaleMode`), `UIPanelBuilder.cs` (`SetDefaultFont`, `IsTextInputFocused`), `ProAPI.md`/`BasicAPI.md`, `Docs/Release.md`, `Docs/playtestGoals.md`, `Docs/BACKLOG.md`.
-- Nazwy członków Unity 6 (IL2CPP) sprawdzone w interop DLL gry (`cms2027assembly` ma tylko Assembly-CSharp), narzędziem w scratchpadzie.
-- Po zakończeniu: odpowiedź do `blastcoreos-df` z listą sygnatur i wersją.
-
-### Decyzje użytkownika (2026-11-21)
-
-Wszystko naraz, wersja 0.4.0, z `SetDefaultFont`. Stare zachowanie zostaje, nowe rzeczy obok.
+- `Docs/Design/contract.md`: BlastCoreOS używa nowego API 0.4.0 (grep 2026-11-23).
+- `Docs/Release.md`: poprawić wpływ zmiany `BgScaleMode` (BlastCoreOS woła), zależność BlastCoreOS od 0.4.0, oznaczyć wydanie.
+- `README.md`: changelog 0.4.0 dla moderów (bez myślników w zdaniach).
+- Build check.
 
 ## Wynik
 
-Pliki:
-- `UIRuntime.cs`: typy Length/Flex/Wrap/Background* w osobnym `ResolveLayoutTypes` (nie blokuje startu), `SetBackgroundSprite`, `FindFont` (cache), wewn. `MakeFontDefinition`, `IsTextInputFocusedIn`.
-- `UIElements.cs`: `BgScaleMode` działa; nowe `S.Font(s, Font)`, flex, marginesy, procenty, min/max.
-- `UIHandles.cs`: `UIImageHandle.SetSprite`.
-- `UIPanelBuilder.cs`: `IsTextInputFocused`, `SetDefaultFont`, wewn. `ApplyFont`; stare `S.Font(x)` → `ApplyFont(x)` (bez fontu panelu to samo co wcześniej).
-- `UIRowBuilder.cs`: `S.Font(x)` → `UIPanel.ApplyFont(_panel, x)`.
-- `FrameworkPlugin.cs`: wersja 0.4.0 (`MelonInfo` + `Version`).
-- `README.md`, `BasicAPI.md`, `ProAPI.md`: wersja 0.4.0, nowe API, usunięte ograniczenie SetScaleMode.
-- `Samples/try_api040.cs`: skrypt REPL testu G1–G5 (sprawdzony kompilacją względem nowej DLL).
-- `Docs/Release.md`, `Docs/playtestGoals.md`, `Docs/BACKLOG.md`.
 
-Publiczne API: 23 nowe członki, 0 usuniętych/zmienionych (diff DLL). Zmiana zachowania tylko `BgScaleMode`/`SetScaleMode` (nikt z `contract.md` nie woła). Lista w `Docs/Release.md`.
+- `Docs/Design/contract.md`: 4 wiersze z API 0.4.0 dla BlastCoreOS, lista nieużywanego jeszcze API, wymaganie BlastCoreOS >= 0.4.0.
+- `Docs/Release.md`: 0.4.0 "gotowe do wydania 2026-11-23"; poprawiony wpływ `BgScaleMode` (BlastCoreOS woła 20×); punkt o zależności BlastCoreOS i kolejności wydań.
+- `README.md`: sekcja Changelog (0.4.0, 0.3.1), ograniczenie emoji w Known Limitations.
+- `BasicAPI.md`: rozklejone dwa punkty w Known Limitations.
+- `_build_check.sh`: OK. Kod bez zmian.
 
-Goale: G1–G5. `_build_check.sh`: OK.
+## Dodatkowo (2026-11-23): "poprostu zrob poprawke" (ikony promptów jako pełne kółka)
+
+- `UIPrompt.cs` (`LoadResourceTexture`): `tex.hideFlags = HideFlags.HideAndDontSave`, martwa tekstura z cache wczytywana ponownie, ostrzeżenie przy nieudanym `LoadImage`.
+- `Docs/Release.md`, `README.md` (changelog), `Docs/playtestGoals.md` (G6). `_build_check.sh`: OK.
+
+## Dodatkowo (2026-11-23): changelog od użytkownika, opis Nexusa
+
+- `CHANGELOG.md` (nowy, root, EN): 0.1.0–0.4.0 z tekstu użytkownika (myślniki zamienione na dwukropki).
+- `README.md`: link do CHANGELOG zamiast 0.3.1, gra 2027 (tekst i badge), instalacja z folderem ikon, bez myślników.
+- `Docs/NexusOpis.md`: wersja 0.4.0, "What's new in 0.4.0", info dla graczy BlastCoreOS, instalacja z folderem ikon, nowe możliwości, Known Limitations (usunięte SetScaleMode, dodane emoji), bez myślników, badge changelogu → CHANGELOG.md.
+- `Docs/Release.md`: gdzie jest changelog; checklista: paczka musi mieć folder `resources` z ikonami.
